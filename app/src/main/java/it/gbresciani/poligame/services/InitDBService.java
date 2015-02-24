@@ -8,6 +8,7 @@ import android.os.Looper;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import com.orm.SugarRecord;
 import com.squareup.otto.Bus;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class InitDBService extends IntentService {
 
         try {
             InputStream JSONInputStream = assetManager.open("words.json");
+            flushWords();
             parseAndSaveWords(JSONInputStream);
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,6 +72,13 @@ public class InitDBService extends IntentService {
         }
         reader.endArray();
         reader.close();
+    }
+
+    /*
+    * Remove all words from the database
+    * */
+    private void flushWords() {
+        SugarRecord.deleteAll(Word.class);
     }
 }
 
