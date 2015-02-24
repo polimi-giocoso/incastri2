@@ -1,4 +1,4 @@
-package it.gbresciani.poligame.model.entities;
+package it.gbresciani.poligame.model;
 
 import com.orm.SugarRecord;
 
