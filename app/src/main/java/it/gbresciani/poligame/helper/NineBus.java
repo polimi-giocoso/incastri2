@@ -9,23 +9,23 @@ import com.squareup.otto.ThreadEnforcer;
 /**
  * Extends Otto Bus to extend it with the abilty to post on the main thread
  */
-public class BearBus extends Bus {
+public class NineBus extends Bus {
 
     private final Handler mainThread = new Handler(Looper.getMainLooper());
 
-    public BearBus() {
+    public NineBus() {
         super();
     }
 
-    public BearBus(String identifier) {
+    public NineBus(String identifier) {
         super(identifier);
     }
 
-    public BearBus(ThreadEnforcer enforcer) {
+    public NineBus(ThreadEnforcer enforcer) {
         super(enforcer);
     }
 
-    public BearBus(ThreadEnforcer enforcer, String identifier) {
+    public NineBus(ThreadEnforcer enforcer, String identifier) {
         super(enforcer, identifier);
     }
 
@@ -35,7 +35,7 @@ public class BearBus extends Bus {
         }else{
             mainThread.post(new Runnable() {
                 @Override public void run() {
-                    post(event);
+                    NineBus.super.post(event);
                 }
             });
         }
