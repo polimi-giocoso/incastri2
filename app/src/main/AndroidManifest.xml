@@ -18,6 +18,10 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name="it.gbresciani.poligame.services.InitDBService"
+            android:exported="false" />
+
         <meta-data
             android:name="DATABASE"
             android:value="game.db" />
@@ -29,7 +33,7 @@
             android:value="true" />
         <meta-data
             android:name="DOMAIN_PACKAGE_NAME"
-            android:value="it.gbresciani.model.entities" />
+            android:value="it.gbresciani.poligame.model" />
     </application>
 
 </manifest>
