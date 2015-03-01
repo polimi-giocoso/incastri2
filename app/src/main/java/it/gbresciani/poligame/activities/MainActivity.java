@@ -1,5 +1,7 @@
 package it.gbresciani.poligame.activities;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -15,6 +17,8 @@ import butterknife.InjectView;
 import butterknife.OnClick;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.events.LoadingEvent;
+import it.gbresciani.poligame.fragments.SyllablesFragment;
+import it.gbresciani.poligame.fragments.WordsFragment;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.services.InitDBService;
 
@@ -22,8 +26,6 @@ import it.gbresciani.poligame.services.InitDBService;
 public class MainActivity extends FragmentActivity {
 
     private Bus BUS;
-
-    @InjectView(R.id.play_button) Button playButton;
 
 
     @Override

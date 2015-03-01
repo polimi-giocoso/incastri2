@@ -1,7 +1,7 @@
 package it.gbresciani.poligame.events;
 
 /**
- * Event representing the state of the database loading process
+ * Bus Event representing the state of the database loading process
  */
 public class LoadingEvent {
 
