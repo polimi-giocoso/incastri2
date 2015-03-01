@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:custom="http://schemas.android.com/apk/res-auto">
+
+    <it.gbresciani.poligame.customUIElements.NOSyllablesPreference
+        android:defaultValue="1"
+        android:dialogTitle="@string/setting_no_syllables_title"
+        android:key="@string/setting_no_syllables_key"
+        android:summary="@string/setting_no_syllables_summary"
+        android:title="@string/setting_no_syllables_title">
+
+    </it.gbresciani.poligame.customUIElements.NOSyllablesPreference>
+
+    <it.gbresciani.poligame.customUIElements.NumberPickerPreference
+        android:defaultValue="1"
+        android:dialogTitle="@string/setting_no_pages_title"
+        android:key="@string/setting_no_pages_key"
+        android:summary="@string/setting_no_pages_summary"
+        custom:min="1"
+        custom:max="10"
+        android:title="@string/setting_no_pages_title">
+    </it.gbresciani.poligame.customUIElements.NumberPickerPreference>
+
+</PreferenceScreen>
