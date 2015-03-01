@@ -35,12 +35,6 @@ public class MainActivity extends FragmentActivity {
 
     }
 
-    @OnClick(R.id.play_button)
-    public void startPlayActivity(){
-        Intent playActivityIntent = new Intent(this, PlayActivity.class);
-        startActivity(playActivityIntent);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -51,6 +45,18 @@ public class MainActivity extends FragmentActivity {
     protected void onPause() {
         BUS.unregister(this);
         super.onPause();
+    }
+
+    @OnClick(R.id.play_button)
+    public void startPlayActivity(){
+        Intent playActivityIntent = new Intent(this, PlayActivity.class);
+        startActivity(playActivityIntent);
+    }
+
+    @OnClick(R.id.settings_button)
+    public void startSettingsActivity(){
+        Intent playActivityIntent = new Intent(this, SettingsActivity.class);
+        startActivity(playActivityIntent);
     }
 
 }
