@@ -1,6 +1,8 @@
 package it.gbresciani.poligame;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import com.orm.SugarApp;
 
@@ -10,9 +12,10 @@ public class GiocosoApplication extends SugarApp {
 
     @Override
     public void onCreate() {
-        /* Start the intentService that initialize the database */
+        // Start the intentService that initialize the database
         Intent initDBIntent = new Intent(this, InitDBService.class);
         startService(initDBIntent);
+
         super.onCreate();
 
     }
