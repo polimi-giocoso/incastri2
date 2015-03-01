@@ -6,6 +6,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.fragments.SettingsFragment;
 
 public class SettingsActivity extends ActionBarActivity {
 
@@ -13,6 +14,9 @@ public class SettingsActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        getFragmentManager().beginTransaction()
+                .add(R.id.settings_content, SettingsFragment.newInstance())
+                .commit();
     }
 
 
