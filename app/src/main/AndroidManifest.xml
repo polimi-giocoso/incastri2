@@ -39,6 +39,10 @@
             android:name=".activities.PlayActivity"
             android:label="@string/title_activity_play" >
         </activity>
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:label="@string/title_activity_config" >
+        </activity>
     </application>
 
 </manifest>
