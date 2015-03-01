@@ -1,40 +1,45 @@
 package it.gbresciani.poligame.activities;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v7.app.ActionBarActivity;
 
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.fragments.SyllablesFragment;
+import it.gbresciani.poligame.fragments.WordsFragment;
 
+
+/*
+*
+* This Activity contains the two fragments (words and syllables) and manages the game logic trough a finite-state machine
+*
+* */
 public class PlayActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+        initUI();
     }
 
+    /*
+    * Initialize the UI, adding the two fragments
+    */
+    private void initUI() {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_play, menu);
-        return true;
-    }
+        FragmentManager fm = getFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        // TODO: read from preferences
+        WordsFragment wordsFragment = WordsFragment.newInstance(4);
+        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(4);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        ft.add(R.id.words_frame_layout, wordsFragment);
+        ft.add(R.id.syllables_frame_layout, syllablesFragment);
 
-        return super.onOptionsItemSelected(item);
+        ft.commit();
+
     }
 }
