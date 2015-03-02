@@ -4,4 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="activity_settings_vertical_margin">64dp</dimen>
     <dimen name="activity_settings_horizontal_margin">250dp</dimen>
+
+    <dimen name="slot_margin">16dp</dimen>
 </resources>
