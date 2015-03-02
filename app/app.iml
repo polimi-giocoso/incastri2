@@ -89,6 +89,10 @@
     <orderEntry type="library" exported="" name="support-annotations-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="sugar-1.3.1" level="project" />
+    <orderEntry type="library" exported="" name="gson-1.7.2" level="project" />
+    <orderEntry type="library" exported="" name="otto-1.3.6" level="project" />
+    <orderEntry type="library" exported="" name="butterknife-6.1.0" level="project" />
+    <orderEntry type="library" exported="" name="tinymachine-1.1.0" level="project" />
   </component>
 </module>
 
