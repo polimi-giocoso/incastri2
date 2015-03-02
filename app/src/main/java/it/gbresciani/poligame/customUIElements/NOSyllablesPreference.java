@@ -34,27 +34,31 @@ public class NOSyllablesPreference extends DialogPreference {
         super.onBindDialogView(view);
         ButterKnife.inject(this, view);
 
-        syllablesRadioGroup.check(getPersistedInt(R.id.four_syllables_radio_button));
+        int noSyllables = getPersistedInt(defaultNumber);
+        if(noSyllables == 4){
+            syllablesRadioGroup.check(R.id.four_syllables_radio_button);
+        }
+        if(noSyllables == 2){
+            syllablesRadioGroup.check(R.id.two_syllables_radio_button);
+        }
     }
 
     @Override
     protected void onDialogClosed(boolean positiveResult) {
         // When the user selects "OK", persist the new value
         if (positiveResult) {
-            persistInt(syllablesRadioGroup.getCheckedRadioButtonId());
+            if(syllablesRadioGroup.getCheckedRadioButtonId() == R.id.four_syllables_radio_button){
+                persistInt(4);
+            }
+            if(syllablesRadioGroup.getCheckedRadioButtonId()== R.id.two_syllables_radio_button){
+                persistInt(2);
+            }
         }
         setSummary(getSummary());
     }
 
     @Override
     public CharSequence getSummary() {
-        if (getPersistedInt(R.id.four_syllables_radio_button) == R.id.four_syllables_radio_button) {
-            return String.valueOf(4);
-        }
-        if (getPersistedInt(R.id.four_syllables_radio_button) == R.id.two_syllables_radio_button) {
-            return String.valueOf(2);
-        }
-
-        return String.valueOf(defaultNumber);
+        return String.valueOf(getPersistedInt(defaultNumber));
     }
 }
