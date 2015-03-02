@@ -18,20 +18,20 @@ public class SyllablesFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String SYLLABLES_COUNT = "syllables_count";
 
-    private Integer syllablesCount;
+    private Integer noSyllables;
 
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param syllablesCount Parameter 1.
+     * @param noSyllables Parameter 1.
      * @return A new instance of fragment SyllablesFragment.
      */
-    public static SyllablesFragment newInstance(Integer syllablesCount) {
+    public static SyllablesFragment newInstance(Integer noSyllables) {
         SyllablesFragment fragment = new SyllablesFragment();
         Bundle args = new Bundle();
-        args.putInt(SYLLABLES_COUNT, syllablesCount);
+        args.putInt(SYLLABLES_COUNT, noSyllables);
         fragment.setArguments(args);
         return fragment;
     }
@@ -44,7 +44,7 @@ public class SyllablesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            syllablesCount = getArguments().getInt(SYLLABLES_COUNT);
+            noSyllables = getArguments().getInt(SYLLABLES_COUNT);
         }
     }
 
