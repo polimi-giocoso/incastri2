@@ -52,7 +52,11 @@ public class SyllablesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_syllables, container, false);
+        if(noSyllables == 2) {
+            return inflater.inflate(R.layout.fragment_syllables_two, container, false);
+        }else{
+            return inflater.inflate(R.layout.fragment_syllables_four, container, false);
+        }
     }
 
 
