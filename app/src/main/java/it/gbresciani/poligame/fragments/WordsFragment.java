@@ -1,11 +1,16 @@
 package it.gbresciani.poligame.fragments;
 
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.ActionMenuView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import butterknife.ButterKnife;
@@ -19,8 +24,9 @@ public class WordsFragment extends Fragment {
     private static final String NO_SYLLABLES = "no_syllables";
 
     private Integer noSyllables;
+    private Activity mActivity;
 
-    @InjectView(R.id.words_container) LinearLayout wordsContainer;
+    @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
 
     /**
@@ -48,6 +54,7 @@ public class WordsFragment extends Fragment {
         if (getArguments() != null) {
             noSyllables = getArguments().getInt(NO_SYLLABLES);
         }
+        mActivity = getActivity();
     }
 
     @Override
@@ -55,19 +62,55 @@ public class WordsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView;
-        if (noSyllables == 2) {
-            rootView = inflater.inflate(R.layout.fragment_words_two, container, false);
-        } else {
-            rootView = inflater.inflate(R.layout.fragment_words_four, container, false);
-        }
+        rootView = inflater.inflate(R.layout.fragment_words, container, false);
         ButterKnife.inject(this, rootView);
 
         return initUI(rootView);
     }
 
-    private View initUI(View rootView){
+    private View initUI(View rootView) {
 
+        // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
+        ViewTreeObserver vto = wordsContainerLinearLayout.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override public void onGlobalLayout() {
+                // Remove the observer
+                wordsContainerLinearLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
+                // Get the layout dimensions
+                int width = wordsContainerLinearLayout.getMeasuredWidth();
+                int height = wordsContainerLinearLayout.getMeasuredHeight();
+
+                // To maintain proportions calculates the margin according to the number of slot to be displayed
+                int slotMargin = ((int) getResources().getDimension(R.dimen.slot_margin)) / noSyllables;
+
+                // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
+                // by the number of slots to be drawn minus two margins
+                int slotDimen = Math.min(width, (height / noSyllables)) - 2 * slotMargin;
+
+                // Draw as much slots as needed
+                for (int i = 0; i < noSyllables; i++) {
+                    // Create a FrameLayout as a container for the slot to center it
+                    FrameLayout fl = new FrameLayout(mActivity);
+                    LinearLayout.LayoutParams fParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                                                    ViewGroup.LayoutParams.MATCH_PARENT);
+                    fParams.weight = 1;
+                    fParams.gravity = Gravity.CENTER;
+                    fl.setLayoutParams(fParams);
+
+                    // Create the slot View and add it to the FrameLayout container
+                    View slot = new View(mActivity);
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(slotDimen, slotDimen);
+                    params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
+                    slot.setBackgroundResource(R.drawable.shape_empty_slot);
+                    slot.setLayoutParams(params);
+                    fl.addView(slot);
+
+                    // Add the FrameLayout container to the main layout
+                    wordsContainerLinearLayout.addView(fl);
+                }
+            }
+        });
         return rootView;
     }
 }
