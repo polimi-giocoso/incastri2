@@ -92,14 +92,14 @@ public class WordsFragment extends Fragment {
 
                 // Draw as much slots as needed
                 for (int i = 0; i < noSyllables; i++) {
-                    // Create a FrameLayout as a container for the slot to center it
+                    // Create a Relative as a container for the slot to center it
                     RelativeLayout rl = new RelativeLayout(mActivity);
                     LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                                                     ViewGroup.LayoutParams.MATCH_PARENT);
                     rParams.weight = 1;
                     rl.setLayoutParams(rParams);
 
-                    // Create the slot View and add it to the FrameLayout container
+                    // Create the slot View and add it to the RelativeLayout container
                     View slot = new View(mActivity);
                     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
                     params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
@@ -108,7 +108,7 @@ public class WordsFragment extends Fragment {
                     slot.setLayoutParams(params);
                     rl.addView(slot);
 
-                    // Add the FrameLayout container to the main layout
+                    // Add the RelativeLayout container to the main layout
                     wordsContainerLinearLayout.addView(rl);
                 }
             }
