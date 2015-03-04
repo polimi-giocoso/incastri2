@@ -4,6 +4,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 
@@ -22,6 +23,9 @@ public class PlayActivity extends ActionBarActivity {
     private int noPages;
     private int noSyllables;
 
+    private WordsFragment currentWordsFragment;
+    private SyllablesFragment currentSyllablesFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +36,13 @@ public class PlayActivity extends ActionBarActivity {
         noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
 
         initUI(noPages, noSyllables);
+
+        Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            @Override public void run() {
+                nextPage();
+            }
+        }, 2000);
     }
 
     /**
@@ -46,18 +57,36 @@ public class PlayActivity extends ActionBarActivity {
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        WordsFragment wordsFragment = WordsFragment.newInstance(noSyllables);
-        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(noSyllables);
+        ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
 
-        ft.add(R.id.words_frame_layout, wordsFragment);
-        ft.add(R.id.syllables_frame_layout, syllablesFragment);
+        currentWordsFragment = WordsFragment.newInstance(noSyllables);
+        currentSyllablesFragment = SyllablesFragment.newInstance(noSyllables);
+
+        ft.replace(R.id.words_frame_layout, currentWordsFragment);
+        ft.replace(R.id.syllables_frame_layout, currentSyllablesFragment);
 
         ft.commit();
-
-
-
-
-
     }
+
+    /**
+    * Go to the next page, removing the old fragments and adding new ones.
+    *
+    */
+    private void nextPage() {
+
+        FragmentManager fm = getFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+
+        ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+
+        currentWordsFragment = WordsFragment.newInstance(noSyllables);
+        currentSyllablesFragment = SyllablesFragment.newInstance(noSyllables);
+
+        //ft.add(R.id.words_frame_layout, currentWordsFragment);
+        ft.replace(R.id.syllables_frame_layout, currentSyllablesFragment);
+
+        ft.commit();
+    }
+
 
 }
