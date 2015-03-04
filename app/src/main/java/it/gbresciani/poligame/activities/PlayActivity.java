@@ -29,7 +29,7 @@ public class PlayActivity extends ActionBarActivity {
         // Get match configuration
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         noPages = sp.getInt(getString(R.string.setting_no_pages_key), 1);
-        noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), R.id.four_syllables_radio_button);
+        noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
 
         initUI(noPages, noSyllables);
     }

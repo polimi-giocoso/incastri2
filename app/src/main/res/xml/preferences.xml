@@ -3,10 +3,10 @@
                   xmlns:custom="http://schemas.android.com/apk/res-auto">
 
     <it.gbresciani.poligame.customUIElements.NOSyllablesPreference
-        android:defaultValue="1"
+        android:defaultValue="4"
         android:dialogTitle="@string/setting_no_syllables_title"
         android:key="@string/setting_no_syllables_key"
-        android:summary="@string/setting_no_syllables_summary"
+        android:summary="4"
         android:title="@string/setting_no_syllables_title">
 
     </it.gbresciani.poligame.customUIElements.NOSyllablesPreference>
