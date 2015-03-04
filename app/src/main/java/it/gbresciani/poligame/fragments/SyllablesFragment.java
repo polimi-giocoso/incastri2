@@ -11,6 +11,8 @@ import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import java.util.Random;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.poligame.R;
@@ -111,6 +113,11 @@ public class SyllablesFragment extends Fragment {
                         params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
                         slot.setBackgroundResource(R.drawable.shape_empty_slot);
                         slot.setLayoutParams(params);
+
+                        // Set random rotation angle between -25 and 25
+                        Random rnd = new Random();
+                        rl.setRotation(rnd.nextInt(50) - 25);
+
                         rl.addView(slot);
 
                         // Add the RelativeLayout container to the main layout
