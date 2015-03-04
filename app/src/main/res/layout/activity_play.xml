@@ -1,21 +1,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:orientation="horizontal" tools:context=".MainActivity">
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="horizontal"
+              tools:context=".MainActivity">
 
     <FrameLayout
+        android:id="@+id/words_frame_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="3"
-        android:background="@color/background_material_light"
-        android:id="@+id/words_frame_layout">
+        android:layout_weight="3">
     </FrameLayout>
 
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="#000000">
+    </View>
+
     <FrameLayout
+        android:id="@+id/syllables_frame_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:id="@+id/syllables_frame_layout"
-        android:background="@color/abc_search_url_text_normal">
+        android:layout_weight="1">
     </FrameLayout>
 
 </LinearLayout>
