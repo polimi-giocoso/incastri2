@@ -9,9 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.AnimationUtils;
 import android.widget.ActionMenuView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -91,23 +93,23 @@ public class WordsFragment extends Fragment {
                 // Draw as much slots as needed
                 for (int i = 0; i < noSyllables; i++) {
                     // Create a FrameLayout as a container for the slot to center it
-                    FrameLayout fl = new FrameLayout(mActivity);
-                    LinearLayout.LayoutParams fParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                    RelativeLayout rl = new RelativeLayout(mActivity);
+                    LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                                                     ViewGroup.LayoutParams.MATCH_PARENT);
-                    fParams.weight = 1;
-                    fParams.gravity = Gravity.CENTER;
-                    fl.setLayoutParams(fParams);
+                    rParams.weight = 1;
+                    rl.setLayoutParams(rParams);
 
                     // Create the slot View and add it to the FrameLayout container
                     View slot = new View(mActivity);
-                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(slotDimen, slotDimen);
+                    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
                     params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
+                    params.addRule(RelativeLayout.CENTER_IN_PARENT);
                     slot.setBackgroundResource(R.drawable.shape_empty_slot);
                     slot.setLayoutParams(params);
-                    fl.addView(slot);
+                    rl.addView(slot);
 
                     // Add the FrameLayout container to the main layout
-                    wordsContainerLinearLayout.addView(fl);
+                    wordsContainerLinearLayout.addView(rl);
                 }
             }
         });
