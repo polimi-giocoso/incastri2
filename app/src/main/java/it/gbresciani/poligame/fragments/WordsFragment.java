@@ -66,11 +66,11 @@ public class WordsFragment extends Fragment {
         View rootView;
         rootView = inflater.inflate(R.layout.fragment_words, container, false);
         ButterKnife.inject(this, rootView);
-
-        return initUI(rootView);
+        initUI();
+        return rootView;
     }
 
-    private View initUI(View rootView) {
+    private void initUI() {
 
         // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
         ViewTreeObserver vto = wordsContainerLinearLayout.getViewTreeObserver();
@@ -113,6 +113,5 @@ public class WordsFragment extends Fragment {
                 }
             }
         });
-        return rootView;
     }
 }
