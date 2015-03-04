@@ -3,6 +3,7 @@ package it.gbresciani.poligame.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -70,6 +71,14 @@ public class SyllablesFragment extends Fragment {
         return rootView;
     }
 
+    private int rndColor(){
+        Random rand = new Random();
+        int r = rand.nextInt(255);
+        int g = rand.nextInt(255);
+        int b = rand.nextInt(255);
+        return Color.rgb(r, g, b);
+    }
+
     private void initUI() {
 
         // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
@@ -111,7 +120,7 @@ public class SyllablesFragment extends Fragment {
                         params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
                         params.addRule(RelativeLayout.CENTER_IN_PARENT);
                         params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
-                        slot.setBackgroundResource(R.drawable.shape_empty_slot);
+                        slot.setBackgroundColor(rndColor());
                         slot.setLayoutParams(params);
 
                         // Set random rotation angle between -25 and 25
