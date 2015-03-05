@@ -165,7 +165,7 @@ public class PlayActivity extends FragmentActivity {
      * React to a PageCompletedEvent, changing the layout
      */
     @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
-            showPageCompleted();
+        showPageCompleted();
     }
 
     /**
@@ -357,10 +357,10 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
-    private void setTTSLang(Locale locale){
-        if(ttsConfigured){
+    private void setTTSLang(Locale locale) {
+        if (ttsConfigured) {
             mTTS.setLanguage(locale);
-        }else{
+        } else {
             Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
         }
     }
