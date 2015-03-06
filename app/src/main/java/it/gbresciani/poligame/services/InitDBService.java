@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 
 import it.gbresciani.poligame.events.LoadingEvent;
 import it.gbresciani.poligame.helper.BusProvider;
+import it.gbresciani.poligame.model.Syllable;
 import it.gbresciani.poligame.model.Word;
 
 public class InitDBService extends IntentService {
@@ -42,9 +43,11 @@ public class InitDBService extends IntentService {
         BUS.post(new LoadingEvent(LoadingEvent.STATE_STARTED));
 
         try {
-            InputStream JSONInputStream = assetManager.open("words.json");
-            flushWords();
-            parseAndSaveWords(JSONInputStream);
+            InputStream JSONInputStreamWords = assetManager.open("words.json");
+            InputStream JSONInputStreamSyllables = assetManager.open("syllables.json");
+            flushDB();
+            parseAndSaveWords(JSONInputStreamWords);
+            parseAndSaveSyllables(JSONInputStreamSyllables);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -73,12 +76,28 @@ public class InitDBService extends IntentService {
         reader.endArray();
         reader.close();
     }
+    /*
+    * Parses the input stream and returns a List of Syllables objects
+    */
+    private void parseAndSaveSyllables(InputStream in) throws IOException {
+
+        JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+
+        reader.beginArray();
+        while (reader.hasNext()) {
+            Syllable syllable = gson.fromJson(reader, Syllable.class);
+            syllable.save();
+        }
+        reader.endArray();
+        reader.close();
+    }
 
     /*
     * Remove all words from the database
     * */
-    private void flushWords() {
+    private void flushDB() {
         SugarRecord.deleteAll(Word.class);
+        SugarRecord.deleteAll(Syllable.class);
     }
 }
 
