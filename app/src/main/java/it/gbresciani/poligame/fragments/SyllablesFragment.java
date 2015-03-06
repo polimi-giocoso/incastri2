@@ -144,14 +144,14 @@ public class SyllablesFragment extends Fragment {
                         ScaleAnimation scaleAnimation = new ScaleAnimation(0f, 1f, 0f, 1f,
                                 ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
                                 ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
-                        scaleAnimation.setStartOffset(250);
+                        scaleAnimation.setStartOffset(500);
                         scaleAnimation.setDuration(750);
 
                         RotateAnimation rotateAnimation = new RotateAnimation(0, degree,
                                 RotateAnimation.RELATIVE_TO_SELF, 0.5f,
                                 RotateAnimation.RELATIVE_TO_SELF, 0.5f);
                         rotateAnimation.setDuration(750);
-                        rotateAnimation.setStartOffset(250);
+                        rotateAnimation.setStartOffset(500);
 
                         animSet.addAnimation(scaleAnimation);
                         animSet.addAnimation(rotateAnimation);
