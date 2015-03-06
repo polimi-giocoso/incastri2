@@ -36,13 +36,6 @@ public class PlayActivity extends ActionBarActivity {
         noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
 
         initUI(noPages, noSyllables);
-
-        Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            @Override public void run() {
-                nextPage();
-            }
-        }, 2000);
     }
 
     /**
@@ -57,8 +50,6 @@ public class PlayActivity extends ActionBarActivity {
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-
         currentWordsFragment = WordsFragment.newInstance(noSyllables);
         currentSyllablesFragment = SyllablesFragment.newInstance(noSyllables);
 
@@ -67,26 +58,4 @@ public class PlayActivity extends ActionBarActivity {
 
         ft.commit();
     }
-
-    /**
-    * Go to the next page, removing the old fragments and adding new ones.
-    *
-    */
-    private void nextPage() {
-
-        FragmentManager fm = getFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-
-        ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-
-        currentWordsFragment = WordsFragment.newInstance(noSyllables);
-        currentSyllablesFragment = SyllablesFragment.newInstance(noSyllables);
-
-        //ft.add(R.id.words_frame_layout, currentWordsFragment);
-        ft.replace(R.id.syllables_frame_layout, currentSyllablesFragment);
-
-        ft.commit();
-    }
-
-
 }
