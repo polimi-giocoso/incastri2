@@ -5,13 +5,19 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
+import android.view.animation.ScaleAnimation;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import butterknife.ButterKnife;
@@ -31,6 +37,8 @@ public class SyllablesFragment extends Fragment {
     private Activity mActivity;
 
     @InjectView(R.id.syllables_container) LinearLayout syllablesContainerLinearLayout;
+    @InjectView(R.id.syllables_layout_1) LinearLayout syllablesLinearLayout1;
+    @InjectView(R.id.syllables_layout_2) LinearLayout syllablesLinearLayout2;
 
     /**
      * Use this factory method to create a new instance of
@@ -71,7 +79,7 @@ public class SyllablesFragment extends Fragment {
         return rootView;
     }
 
-    private int rndColor(){
+    private int rndColor() {
         Random rand = new Random();
         int r = rand.nextInt(255);
         int g = rand.nextInt(255);
@@ -99,41 +107,59 @@ public class SyllablesFragment extends Fragment {
                 // by the number of slots to be drawn minus two margins
                 int slotDimen = Math.min(width / 2, (height / (noSyllables / 2))) - 2 * slotMargin;
 
+                List<LinearLayout> syllablesLayouts = new ArrayList<>();
+                syllablesLayouts.add(syllablesLinearLayout1);
+                syllablesLayouts.add(syllablesLinearLayout2);
+
                 // Add 2 LinearLayout
-                for (int i = 0; i < 2; i++) {
-                    LinearLayout ll = new LinearLayout(mActivity);
-                    LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1f);
-                    ll.setOrientation(LinearLayout.VERTICAL);
-                    ll.setLayoutParams(lparams);
+                for (LinearLayout ll : syllablesLayouts) {
 
                     // Add 1 or 2 slot according to the preferences
                     for (int j = 0; j < noSyllables / 2; j++) {
                         // Create a Relative as a container for the slot to center it
-                        RelativeLayout rl = new RelativeLayout(mActivity);
-                        LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        LinearLayout ll2 = new LinearLayout(mActivity);
+                        LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT);
-                        rParams.weight = 1;
-                        rl.setLayoutParams(rParams);
+                        lParams.weight = 1;
+                        ll2.setLayoutParams(lParams);
+                        // Add the RelativeLayout container to the main layout
+                        ll.addView(ll2);
 
-                        View slot = new View(mActivity);
-                        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
+                        final View slot = new View(mActivity);
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(slotDimen, slotDimen);
                         params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
-                        params.addRule(RelativeLayout.CENTER_IN_PARENT);
-                        params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
+                        params.gravity = Gravity.CENTER;
                         slot.setBackgroundColor(rndColor());
-                        slot.setLayoutParams(params);
 
                         // Set random rotation angle between -25 and 25
                         Random rnd = new Random();
-                        rl.setRotation(rnd.nextInt(50) - 25);
+                        final int degree = rnd.nextInt(50) - 25;
+                        slot.setLayoutParams(params);
 
-                        rl.addView(slot);
+                        AnimationSet animSet = new AnimationSet(true);
+                        animSet.setInterpolator(new DecelerateInterpolator());
+                        animSet.setFillAfter(true);
 
-                        // Add the RelativeLayout container to the main layout
-                        ll.addView(rl);
+                        // Create entering animation
+                        ScaleAnimation scaleAnimation = new ScaleAnimation(0f, 1f, 0f, 1f,
+                                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+                        scaleAnimation.setStartOffset(250);
+                        scaleAnimation.setDuration(750);
+
+                        RotateAnimation rotateAnimation = new RotateAnimation(0, degree,
+                                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                                RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+                        rotateAnimation.setDuration(750);
+                        rotateAnimation.setStartOffset(250);
+
+                        animSet.addAnimation(scaleAnimation);
+                        animSet.addAnimation(rotateAnimation);
+
+                        slot.startAnimation(animSet);
+
+                        ll2.addView(slot);
                     }
-
-                    syllablesContainerLinearLayout.addView(ll);
                 }
             }
         });
