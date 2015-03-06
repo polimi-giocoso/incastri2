@@ -1,17 +1,17 @@
 package it.gbresciani.poligame.fragments;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
 import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.AnimationUtils;
-import android.widget.ActionMenuView;
-import android.widget.FrameLayout;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -95,7 +95,7 @@ public class WordsFragment extends Fragment {
                     // Create a Relative as a container for the slot to center it
                     RelativeLayout rl = new RelativeLayout(mActivity);
                     LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                                                    ViewGroup.LayoutParams.MATCH_PARENT);
+                            ViewGroup.LayoutParams.MATCH_PARENT);
                     rParams.weight = 1;
                     rl.setLayoutParams(rParams);
 
@@ -106,6 +106,8 @@ public class WordsFragment extends Fragment {
                     params.addRule(RelativeLayout.CENTER_IN_PARENT);
                     slot.setBackgroundResource(R.drawable.shape_empty_slot);
                     slot.setLayoutParams(params);
+
+                    // Add the slot to its RelativeLayout
                     rl.addView(slot);
 
                     // Add the RelativeLayout container to the main layout
