@@ -15,9 +15,13 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.model.Word;
 
 /**
  * The fragment that shows the list of words
@@ -25,7 +29,7 @@ import it.gbresciani.poligame.R;
 public class WordsFragment extends Fragment {
     private static final String NO_SYLLABLES = "no_syllables";
 
-    private Integer noSyllables;
+    private List<Word> words;
     private Activity mActivity;
 
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
@@ -35,13 +39,14 @@ public class WordsFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param noSyllables Parameter 1.
+     * @param words The list of words available in this pagew.
      * @return A new instance of fragment WordsFragment.
      */
-    public static WordsFragment newInstance(Integer noSyllables) {
+    public static WordsFragment newInstance(ArrayList<Word> words) {
         WordsFragment fragment = new WordsFragment();
         Bundle args = new Bundle();
-        args.putInt(NO_SYLLABLES, noSyllables);
+        args.putParcelableArrayList(NO_SYLLABLES, words);
+        args.putSerializable(NO_SYLLABLES, words);
         fragment.setArguments(args);
         return fragment;
     }
@@ -54,7 +59,7 @@ public class WordsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            noSyllables = getArguments().getInt(NO_SYLLABLES);
+            words = getArguments().getParcelableArrayList(NO_SYLLABLES);
         }
         mActivity = getActivity();
     }
@@ -72,6 +77,8 @@ public class WordsFragment extends Fragment {
 
     private void initUI() {
 
+        final int wordsCount = words.size() <= 4 ? words.size() : 4;
+
         // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
         ViewTreeObserver vto = wordsContainerLinearLayout.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -84,14 +91,14 @@ public class WordsFragment extends Fragment {
                 int height = wordsContainerLinearLayout.getMeasuredHeight();
 
                 // To maintain proportions calculates the margin according to the number of slot to be displayed
-                int slotMargin = ((int) getResources().getDimension(R.dimen.slot_margin)) / noSyllables;
+                int slotMargin = ((int) getResources().getDimension(R.dimen.slot_margin)) / wordsCount;
 
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
-                int slotDimen = Math.min(width, (height / noSyllables)) - 2 * slotMargin;
+                int slotDimen = Math.min(width, (height / wordsCount)) - 2 * slotMargin;
 
                 // Draw as much slots as needed
-                for (int i = 0; i < noSyllables; i++) {
+                for (int i = 0; i < wordsCount; i++) {
                     // Create a Relative as a container for the slot to center it
                     RelativeLayout rl = new RelativeLayout(mActivity);
                     LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
