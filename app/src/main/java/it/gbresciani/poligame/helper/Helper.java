@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Random;
 import java.util.Set;
 
@@ -38,7 +39,7 @@ public class Helper {
             return syllables;
         }
 
-        for(Iterator<Syllable> its = syllables.iterator(); its.hasNext(); ){
+        for(ListIterator<Syllable> its = syllables.listIterator(); its.hasNext(); ){
             Syllable s = its.next();
             // Sillable trovate
             if(num == 0){
@@ -59,14 +60,14 @@ public class Helper {
                     Syllable syllable1 = new Syllable(newWord.getSyllable1());
                     Syllable syllable2 = new Syllable(newWord.getSyllable2());
                     if(!syllables.contains(syllable1)){
-                        syllables.add(syllable1);
+                        its.add(syllable1);
                         num--;
                         if(num == 0){
                             return syllables;
                         }
                     }
                     if(!syllables.contains(syllable2)){
-                        syllables.add(syllable2);
+                        its.add(syllable2);
                         num--;
                         if(num == 0){
                             return syllables;
@@ -86,7 +87,7 @@ public class Helper {
      * @param syllables   The list of Syllables
      * @param k The length of words (in syllables)
      */
-    public static List<Word> permuteSyllablesInWords(List<Syllable> syllables, int k) {
+    public static ArrayList<Word> permuteSyllablesInWords(List<Syllable> syllables, int k) {
         ArrayList<ArrayList<Syllable>> result = new ArrayList<>();
 
         // Start from an empty list
@@ -125,7 +126,7 @@ public class Helper {
         result.clear();
         result.addAll(resultSet);
 
-        List<Word> resultWords = new ArrayList<>();
+        ArrayList<Word> resultWords = new ArrayList<>();
 
         // Transform syllable couples in words
         for (ArrayList<Syllable> r : result){
