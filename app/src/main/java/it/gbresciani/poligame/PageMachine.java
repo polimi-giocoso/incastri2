@@ -4,15 +4,17 @@ import com.squareup.otto.Bus;
 
 import de.halfbit.tinymachine.StateHandler;
 import de.halfbit.tinymachine.TinyMachine;
+import it.gbresciani.poligame.events.EnterStateEndEvent;
 import it.gbresciani.poligame.events.EnterStateInitEvent;
 import it.gbresciani.poligame.events.EnterStateSyllSelectedEvent;
 import it.gbresciani.poligame.events.EnterStateWordSelectedEvent;
+import it.gbresciani.poligame.events.WordSelectedEvent;
 
 
 /*
 * This class implements a finite-state machine (using TinyMachine) that handles the game logic
 */
-public class GameMachine {
+public class PageMachine {
 
     private TinyMachine mGameMachine;
 
@@ -23,16 +25,16 @@ public class GameMachine {
     public static final int STATE_END = 3;
 
     // Events
-    private static final String EVENT_SYLL_TAP = "event_syll_tap";
-    private static final String EVENT_SYLL_TIMEOUT = "event_syll_timeout";
-    private static final String EVENT_WORD_ERROR = "event_word_error";
-    private static final String EVENT_WORD_CORRECT = "event_word_correct";
+    public static final String EVENT_SYLL_TAP = "event_syll_tap";
+    public static final String EVENT_SYLL_TIMEOUT = "event_syll_timeout";
+    public static final String EVENT_WORD_ERROR = "event_word_error";
+    public static final String EVENT_WORD_CORRECT = "event_word_correct";
 
-    public GameMachine(int words, Bus BUS) {
+    public PageMachine(int words, Bus BUS) {
         mGameMachine = new TinyMachine(new GameHandler(words, BUS), STATE_INIT);
     }
 
-    private TinyMachine getTM(){
+    public TinyMachine getTM(){
         return mGameMachine;
     }
 
@@ -97,20 +99,17 @@ public class GameMachine {
          */
 
         @StateHandler(state = STATE_WORD_SELECTED)
-        public void onEventStateWordSelected(String event, TinyMachine tm) {
+        public void onEventStateWordSelected(WordSelectedEvent event, TinyMachine tm) {
 
-            switch (event) {
-                case EVENT_WORD_CORRECT:
-                    wordsFound++;
-                    if (wordsFound == wordsAvailable) {
-                        tm.transitionTo(STATE_END);
-                    } else {
-                        tm.transitionTo(STATE_INIT);
-                    }
-                    break;
-                case EVENT_WORD_ERROR:
+            if(event.isCorrect()){
+                wordsFound++;
+                if (wordsFound == wordsAvailable) {
+                    tm.transitionTo(STATE_END);
+                } else {
                     tm.transitionTo(STATE_INIT);
-                    break;
+                }
+            }else{
+                tm.transitionTo(STATE_INIT);
             }
         }
 
@@ -125,9 +124,12 @@ public class GameMachine {
         * */
 
         @StateHandler(state = STATE_END, type = StateHandler.Type.OnEntry)
-        public void onEntryStateEnd(String event, TinyMachine tm) {
-            mBUS.post(new EnterStateWordSelectedEvent());
+        public void onEntryStateEnd() {
+            mBUS.post(new EnterStateEndEvent());
         }
+
+
     }
+
 
 }
