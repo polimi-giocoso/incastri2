@@ -2,7 +2,6 @@ package it.gbresciani.poligame.helper;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
@@ -19,8 +18,8 @@ public class Helper {
      *
      * @param num the number of syllables to choose
      */
-    public static List<Syllable> chooseSyllables(int num){
-        List<Syllable> syllables = new ArrayList<>();
+    public static ArrayList<Syllable> chooseSyllables(int num){
+        ArrayList<Syllable> syllables = new ArrayList<>();
         List<Word> availWords = Word.listAll(Word.class);
         List<Word> usedWords = new ArrayList<>();
         Random rnd = new Random();
