@@ -1,7 +1,6 @@
 package it.gbresciani.poligame.fragments;
 
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -15,14 +14,21 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import it.gbresciani.poligame.PageMachine;
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.activities.PlayActivity;
+import it.gbresciani.poligame.events.EnterStateInitEvent;
+import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.model.Syllable;
 
 /**
@@ -35,7 +41,14 @@ public class SyllablesFragment extends Fragment {
     private static final String SYLLABLES = "syllables";
 
     private ArrayList<Syllable> syllables;
-    private Activity mActivity;
+    private PlayActivity mActivity;
+    private Bus BUS;
+    private PageMachine pm;
+    private Random rnd = new Random();
+    private String wordSelected = "";
+    private int syllableSelected = 0;
+    private ArrayList<TextView> syllableCards = new ArrayList<>();
+
 
     @InjectView(R.id.syllables_container) LinearLayout syllablesContainerLinearLayout;
     @InjectView(R.id.syllables_layout_1) LinearLayout syllablesLinearLayout1;
@@ -66,7 +79,9 @@ public class SyllablesFragment extends Fragment {
         if (getArguments() != null) {
             syllables = getArguments().getParcelableArrayList(SYLLABLES);
         }
-        mActivity = getActivity();
+        mActivity = (PlayActivity) getActivity();
+        BUS = BusProvider.getInstance();
+        pm = mActivity.getPageMachine();
     }
 
     @Override
@@ -80,6 +95,23 @@ public class SyllablesFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        BUS.register(this);
+    }
+
+    @Override
+    public void onPause() {
+        BUS.unregister(this);
+        super.onPause();
+    }
+
+
+    public String getWordSelected() {
+        return wordSelected;
+    }
+
     private int rndColor() {
         Random rand = new Random();
         int r = rand.nextInt(255);
@@ -87,6 +119,20 @@ public class SyllablesFragment extends Fragment {
         int b = rand.nextInt(255);
         return Color.rgb(r, g, b);
     }
+
+    /*  Events  */
+
+    @Subscribe public void init(EnterStateInitEvent enterStateInitEvent) {
+        wordSelected = "";
+        syllableSelected = 0;
+        for (TextView card : syllableCards) {
+            card.setTextColor(getResources().getColor(android.R.color.black));
+        }
+    }
+
+
+
+    /*  UI Methods  */
 
     private void initUI() {
 
@@ -110,61 +156,84 @@ public class SyllablesFragment extends Fragment {
                 // by the number of slots to be drawn minus two margins
                 int slotDimen = Math.min(width / 2, (height / (syllablesCount / 2))) - 2 * slotMargin;
 
-                List<LinearLayout> syllablesLayouts = new ArrayList<>();
-                syllablesLayouts.add(syllablesLinearLayout1);
-                syllablesLayouts.add(syllablesLinearLayout2);
-
                 // Add 2 LinearLayout
-                for (LinearLayout ll : syllablesLayouts) {
+                for (int i = 0; i < syllablesCount; i++) {
 
-                    // Add 1 or 2 slot according to the preferences
-                    for (int j = 0; j < syllablesCount / 2; j++) {
-                        // Create a Relative as a container for the slot to center it
-                        LinearLayout ll2 = new LinearLayout(mActivity);
-                        LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT);
-                        lParams.weight = 1;
-                        ll2.setLayoutParams(lParams);
-                        // Add the RelativeLayout container to the main layout
-                        ll.addView(ll2);
+                    // Create a Relative as a container for the slot to center it
+                    LinearLayout ll = new LinearLayout(mActivity);
+                    LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT);
+                    lParams.weight = 1;
+                    ll.setLayoutParams(lParams);
 
-                        final View slot = new View(mActivity);
-                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(slotDimen, slotDimen);
-                        params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
-                        params.gravity = Gravity.CENTER;
-                        slot.setBackgroundColor(rndColor());
-
-                        // Set random rotation angle between -25 and 25
-                        Random rnd = new Random();
-                        final int degree = rnd.nextInt(50) - 25;
-                        slot.setLayoutParams(params);
-
-                        AnimationSet animSet = new AnimationSet(true);
-                        animSet.setInterpolator(new DecelerateInterpolator());
-                        animSet.setFillAfter(true);
-
-                        // Create entering animation
-                        ScaleAnimation scaleAnimation = new ScaleAnimation(0f, 1f, 0f, 1f,
-                                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
-                                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
-                        scaleAnimation.setStartOffset(500);
-                        scaleAnimation.setDuration(750);
-
-                        RotateAnimation rotateAnimation = new RotateAnimation(0, degree,
-                                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
-                                RotateAnimation.RELATIVE_TO_SELF, 0.5f);
-                        rotateAnimation.setDuration(750);
-                        rotateAnimation.setStartOffset(500);
-
-                        animSet.addAnimation(scaleAnimation);
-                        animSet.addAnimation(rotateAnimation);
-
-                        slot.startAnimation(animSet);
-
-                        ll2.addView(slot);
+                    // Add the RelativeLayout container to the main layout
+                    if (i % 2 == 0) {
+                        syllablesLinearLayout1.addView(ll);
+                    } else {
+                        syllablesLinearLayout2.addView(ll);
                     }
+
+                    TextView card = createSyllableCard(syllables.get(i).getVal(), slotDimen, slotMargin);
+                    syllableCards.add(card);
+                    ll.addView(card);
+
                 }
             }
         });
+    }
+
+    private TextView createSyllableCard(String text, int cardDimen, int cardMargin) {
+
+        TextView textCard = new TextView(mActivity);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardDimen, cardDimen);
+        params.setMargins(cardMargin, cardMargin, cardMargin, cardMargin);
+        params.gravity = Gravity.CENTER;
+        textCard.setBackgroundColor(rndColor());
+        textCard.setText(text);
+        textCard.setGravity(Gravity.CENTER);
+        textCard.setTextSize(100);
+
+        textCard.setLayoutParams(params);
+
+        // Choose a random rotation angle between -25 and 25
+        final int degree = rnd.nextInt(50) - 25;
+
+        // Create entering animations
+        AnimationSet animSet = new AnimationSet(true);
+        animSet.setInterpolator(new DecelerateInterpolator());
+        animSet.setFillAfter(true);
+
+        ScaleAnimation scaleAnimation = new ScaleAnimation(0f, 1f, 0f, 1f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+        scaleAnimation.setStartOffset(500);
+        scaleAnimation.setDuration(750);
+
+        RotateAnimation rotateAnimation = new RotateAnimation(0, degree,
+                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+        rotateAnimation.setStartOffset(500);
+        rotateAnimation.setDuration(750);
+
+        animSet.addAnimation(scaleAnimation);
+        animSet.addAnimation(rotateAnimation);
+
+        textCard.startAnimation(animSet);
+
+        textCard.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                syllableSelected++;
+                wordSelected += ((TextView) v).getText();
+                ((TextView) v).setTextColor(getResources().getColor(android.R.color.white));
+                if (syllableSelected == 1) {
+                    pm.getTM().transitionTo(PageMachine.STATE_SYLL_SELECTED);
+                }
+                if (syllableSelected == 2) {
+                    pm.getTM().transitionTo(PageMachine.STATE_WORD_SELECTED);
+                }
+            }
+        });
+
+        return textCard;
     }
 }

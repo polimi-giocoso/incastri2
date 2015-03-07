@@ -20,7 +20,9 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import it.gbresciani.poligame.PageMachine;
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.activities.PlayActivity;
 import it.gbresciani.poligame.model.Word;
 
 /**
@@ -30,7 +32,8 @@ public class WordsFragment extends Fragment {
     private static final String NO_SYLLABLES = "no_syllables";
 
     private List<Word> words;
-    private Activity mActivity;
+    private PlayActivity mActivity;
+    private PageMachine pm;
 
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
@@ -61,7 +64,8 @@ public class WordsFragment extends Fragment {
         if (getArguments() != null) {
             words = getArguments().getParcelableArrayList(NO_SYLLABLES);
         }
-        mActivity = getActivity();
+        mActivity = (PlayActivity) getActivity();
+        pm = mActivity.getPageMachine();
     }
 
     @Override
@@ -72,12 +76,14 @@ public class WordsFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_words, container, false);
         ButterKnife.inject(this, rootView);
         initUI();
+        pm.getTM().transitionTo(PageMachine.STATE_INIT);
+
         return rootView;
     }
 
     private void initUI() {
 
-        final int wordsCount = words.size() <= 4 ? words.size() : 4;
+        final int wordsToFind = words.size() <= 4 ? words.size() : 4;
 
         // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
         ViewTreeObserver vto = wordsContainerLinearLayout.getViewTreeObserver();
@@ -91,14 +97,14 @@ public class WordsFragment extends Fragment {
                 int height = wordsContainerLinearLayout.getMeasuredHeight();
 
                 // To maintain proportions calculates the margin according to the number of slot to be displayed
-                int slotMargin = ((int) getResources().getDimension(R.dimen.slot_margin)) / wordsCount;
+                int slotMargin = ((int) getResources().getDimension(R.dimen.slot_margin)) / wordsToFind;
 
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
-                int slotDimen = Math.min(width, (height / wordsCount)) - 2 * slotMargin;
+                int slotDimen = Math.min(width, (height / wordsToFind)) - 2 * slotMargin;
 
                 // Draw as much slots as needed
-                for (int i = 0; i < wordsCount; i++) {
+                for (int i = 0; i < wordsToFind; i++) {
                     // Create a Relative as a container for the slot to center it
                     RelativeLayout rl = new RelativeLayout(mActivity);
                     LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
