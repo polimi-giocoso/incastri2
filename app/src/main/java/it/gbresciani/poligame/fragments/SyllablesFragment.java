@@ -23,6 +23,7 @@ import java.util.Random;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.model.Syllable;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -31,9 +32,9 @@ import it.gbresciani.poligame.R;
  */
 public class SyllablesFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String SYLLABLES_COUNT = "syllables_count";
+    private static final String SYLLABLES = "syllables";
 
-    private Integer noSyllables;
+    private ArrayList<Syllable> syllables;
     private Activity mActivity;
 
     @InjectView(R.id.syllables_container) LinearLayout syllablesContainerLinearLayout;
@@ -44,13 +45,13 @@ public class SyllablesFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param noSyllables Parameter 1.
+     * @param syllables Syllables list to show
      * @return A new instance of fragment SyllablesFragment.
      */
-    public static SyllablesFragment newInstance(Integer noSyllables) {
+    public static SyllablesFragment newInstance(ArrayList<Syllable> syllables) {
         SyllablesFragment fragment = new SyllablesFragment();
         Bundle args = new Bundle();
-        args.putInt(SYLLABLES_COUNT, noSyllables);
+        args.putParcelableArrayList(SYLLABLES, syllables);
         fragment.setArguments(args);
         return fragment;
     }
@@ -63,7 +64,7 @@ public class SyllablesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            noSyllables = getArguments().getInt(SYLLABLES_COUNT);
+            syllables = getArguments().getParcelableArrayList(SYLLABLES);
         }
         mActivity = getActivity();
     }
@@ -89,6 +90,8 @@ public class SyllablesFragment extends Fragment {
 
     private void initUI() {
 
+        final int syllablesCount = syllables.size();
+
         // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
         ViewTreeObserver vto = syllablesContainerLinearLayout.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -105,7 +108,7 @@ public class SyllablesFragment extends Fragment {
 
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
-                int slotDimen = Math.min(width / 2, (height / (noSyllables / 2))) - 2 * slotMargin;
+                int slotDimen = Math.min(width / 2, (height / (syllablesCount / 2))) - 2 * slotMargin;
 
                 List<LinearLayout> syllablesLayouts = new ArrayList<>();
                 syllablesLayouts.add(syllablesLinearLayout1);
@@ -115,7 +118,7 @@ public class SyllablesFragment extends Fragment {
                 for (LinearLayout ll : syllablesLayouts) {
 
                     // Add 1 or 2 slot according to the preferences
-                    for (int j = 0; j < noSyllables / 2; j++) {
+                    for (int j = 0; j < syllablesCount / 2; j++) {
                         // Create a Relative as a container for the slot to center it
                         LinearLayout ll2 = new LinearLayout(mActivity);
                         LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
