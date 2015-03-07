@@ -1,9 +1,12 @@
 package it.gbresciani.poligame.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 import com.orm.SugarRecord;
 
-public class Word extends SugarRecord<Word> {
+public class Word extends SugarRecord<Word> implements Parcelable {
 
     public final static String LEMMA = "lemma";
     public final static String SYLLABLE_1 = "syllable1";
@@ -75,4 +78,33 @@ public class Word extends SugarRecord<Word> {
         result = 31 * result + (syllable2 != null ? syllable2.hashCode() : 0);
         return result;
     }
+
+
+    @Override public int describeContents() {
+        return 0;
+    }
+
+    @Override public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.lemma);
+        dest.writeString(this.syllable1);
+        dest.writeString(this.syllable2);
+        dest.writeValue(this.id);
+    }
+
+    private Word(Parcel in) {
+        this.lemma = in.readString();
+        this.syllable1 = in.readString();
+        this.syllable2 = in.readString();
+        this.id = (Long) in.readValue(Long.class.getClassLoader());
+    }
+
+    public static final Parcelable.Creator<Word> CREATOR = new Parcelable.Creator<Word>() {
+        public Word createFromParcel(Parcel source) {
+            return new Word(source);
+        }
+
+        public Word[] newArray(int size) {
+            return new Word[size];
+        }
+    };
 }
