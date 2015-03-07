@@ -24,10 +24,11 @@ import java.util.Random;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import it.gbresciani.poligame.PageMachine;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
-import it.gbresciani.poligame.events.EnterStateInitEvent;
+import it.gbresciani.poligame.events.PageCompletedEvent;
+import it.gbresciani.poligame.events.SyllableSelectedEvent;
+import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.model.Syllable;
 
@@ -43,10 +44,7 @@ public class SyllablesFragment extends Fragment {
     private ArrayList<Syllable> syllables;
     private PlayActivity mActivity;
     private Bus BUS;
-    private PageMachine pm;
     private Random rnd = new Random();
-    private String wordSelected = "";
-    private int syllableSelected = 0;
     private ArrayList<TextView> syllableCards = new ArrayList<>();
 
 
@@ -81,7 +79,6 @@ public class SyllablesFragment extends Fragment {
         }
         mActivity = (PlayActivity) getActivity();
         BUS = BusProvider.getInstance();
-        pm = mActivity.getPageMachine();
     }
 
     @Override
@@ -107,11 +104,6 @@ public class SyllablesFragment extends Fragment {
         super.onPause();
     }
 
-
-    public String getWordSelected() {
-        return wordSelected;
-    }
-
     private int rndColor() {
         Random rand = new Random();
         int r = rand.nextInt(255);
@@ -122,9 +114,8 @@ public class SyllablesFragment extends Fragment {
 
     /*  Events  */
 
-    @Subscribe public void init(EnterStateInitEvent enterStateInitEvent) {
-        wordSelected = "";
-        syllableSelected = 0;
+
+    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         for (TextView card : syllableCards) {
             card.setTextColor(getResources().getColor(android.R.color.black));
         }
@@ -222,15 +213,9 @@ public class SyllablesFragment extends Fragment {
 
         textCard.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                syllableSelected++;
-                wordSelected += ((TextView) v).getText();
+                String syllable = (String) ((TextView) v).getText();
                 ((TextView) v).setTextColor(getResources().getColor(android.R.color.white));
-                if (syllableSelected == 1) {
-                    pm.getTM().transitionTo(PageMachine.STATE_SYLL_SELECTED);
-                }
-                if (syllableSelected == 2) {
-                    pm.getTM().transitionTo(PageMachine.STATE_WORD_SELECTED);
-                }
+                BUS.post(new SyllableSelectedEvent(syllable));
             }
         });
 

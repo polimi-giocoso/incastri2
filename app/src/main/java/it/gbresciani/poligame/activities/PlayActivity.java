@@ -14,11 +14,9 @@ import com.squareup.otto.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
 
-import it.gbresciani.poligame.PageMachine;
 import it.gbresciani.poligame.R;
-import it.gbresciani.poligame.events.EnterStateEndEvent;
-import it.gbresciani.poligame.events.EnterStateSyllSelectedEvent;
-import it.gbresciani.poligame.events.EnterStateWordSelectedEvent;
+import it.gbresciani.poligame.events.PageCompletedEvent;
+import it.gbresciani.poligame.events.SyllableSelectedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.fragments.SyllablesFragment;
 import it.gbresciani.poligame.fragments.WordsFragment;
@@ -36,8 +34,10 @@ public class PlayActivity extends ActionBarActivity {
     private int noPages;
     private int currentPageNum;
     private int noSyllables;
+    private String syllableYetSelected = "";
+    private int currentPageWordsToFind;
+
     private Bus BUS;
-    private PageMachine pm;
 
     private WordsFragment currentWordsFragment;
     private SyllablesFragment currentSyllablesFragment;
@@ -69,13 +69,6 @@ public class PlayActivity extends ActionBarActivity {
     }
 
     /**
-     * @return pm The PageMachine to transition to states
-     */
-    public PageMachine getPageMachine() {
-        return pm;
-    }
-
-    /**
      * Start the game
      */
     private void startGame() {
@@ -92,9 +85,7 @@ public class PlayActivity extends ActionBarActivity {
         ArrayList<Syllable> syllables = Helper.chooseSyllables(noSyllables);
         ArrayList<Word> words = Helper.permuteSyllablesInWords(syllables, 2);
 
-        final int wordsToFind = words.size() <= 4 ? words.size() : 4;
-
-        pm = new PageMachine(wordsToFind, BUS);
+        currentPageWordsToFind = words.size() <= 4 ? words.size() : 4;
 
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
@@ -108,10 +99,10 @@ public class PlayActivity extends ActionBarActivity {
         ft.commit();
     }
 
-    @Subscribe public void pageCompleted(EnterStateEndEvent enterStateEndEvent) {
-        Log.d("pageCompleted", String.valueOf(currentPageNum) + "/" + String.valueOf(noPages));
+    @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
+        Log.d("pageCompleted", String.valueOf(pageCompletedEvent.getPageNumber()) + "/" + String.valueOf(pageCompletedEvent.getPageNumber()));
 
-        if (currentPageNum == noPages) {
+        if (pageCompletedEvent.getPageNumber() == noPages) {
             //TODO Partita finita
             Log.d("pageCompleted", "PARTITA TERMINATA!");
         } else {
@@ -120,25 +111,35 @@ public class PlayActivity extends ActionBarActivity {
         }
     }
 
-    @Subscribe public void syllableSelected(EnterStateSyllSelectedEvent enterStateSyllSelectedEvent) {
-
+    @Subscribe public void syllableSelected(SyllableSelectedEvent syllableSelectedEvent) {
+        if ("".equals(syllableYetSelected)) {
+            syllableYetSelected = syllableSelectedEvent.getSyllable();
+        } else {
+            String selectedWord = syllableYetSelected + syllableSelectedEvent.getSyllable();
+            syllableYetSelected = "";
+            //TODO ask confirmation with dialog
+            if(wordExists(selectedWord)){
+                Log.d("wordSelected", selectedWord + " exists!");
+                BUS.post(new WordSelectedEvent(selectedWord, true));
+            }else{
+                Log.d("wordSelected", selectedWord + " does not exists!");
+                BUS.post(new WordSelectedEvent(selectedWord, false));
+            }
+        }
     }
 
-    @Subscribe public void wordSelected(EnterStateWordSelectedEvent enterStateWordSelectedEvent) {
-        String word = currentSyllablesFragment.getWordSelected();
-        if (wordExists(word)) {
-            Log.d("wordSelected", word + " exists!");
-            pm.getTM().fireEvent(new WordSelectedEvent(word, true));
-        } else {
-            Log.d("wordSelected", word + " does not exists!");
-            pm.getTM().fireEvent(new WordSelectedEvent(word, false));
+    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
+        if(wordSelectedEvent.isCorrect()){
+            currentPageWordsToFind--;
+            if(currentPageWordsToFind == 0){
+                BUS.post(new PageCompletedEvent(currentPageNum));
+            }
         }
     }
 
 
 
     /*  Helper Methods  */
-
 
     private boolean wordExists(String word) {
         List<Word> wordFound = Word.find(Word.class, "lemma = ?", word);

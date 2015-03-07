@@ -1,28 +1,28 @@
 package it.gbresciani.poligame.fragments;
 
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.AnimationSet;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import it.gbresciani.poligame.PageMachine;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
+import it.gbresciani.poligame.events.WordSelectedEvent;
+import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.model.Word;
 
 /**
@@ -33,7 +33,8 @@ public class WordsFragment extends Fragment {
 
     private List<Word> words;
     private PlayActivity mActivity;
-    private PageMachine pm;
+    private Bus BUS;
+    private ArrayList<TextView> availableSlots = new ArrayList<>();
 
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
@@ -65,7 +66,7 @@ public class WordsFragment extends Fragment {
             words = getArguments().getParcelableArrayList(NO_SYLLABLES);
         }
         mActivity = (PlayActivity) getActivity();
-        pm = mActivity.getPageMachine();
+        BUS = BusProvider.getInstance();
     }
 
     @Override
@@ -76,9 +77,20 @@ public class WordsFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_words, container, false);
         ButterKnife.inject(this, rootView);
         initUI();
-        pm.getTM().transitionTo(PageMachine.STATE_INIT);
 
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        BUS.register(this);
+    }
+
+    @Override
+    public void onPause() {
+        BUS.unregister(this);
+        super.onPause();
     }
 
     private void initUI() {
@@ -113,20 +125,29 @@ public class WordsFragment extends Fragment {
                     rl.setLayoutParams(rParams);
 
                     // Create the slot View and add it to the RelativeLayout container
-                    View slot = new View(mActivity);
+                    TextView slot = new TextView(mActivity);
                     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
                     params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
                     params.addRule(RelativeLayout.CENTER_IN_PARENT);
                     slot.setBackgroundResource(R.drawable.shape_empty_slot);
                     slot.setLayoutParams(params);
+                    slot.setTextColor(getResources().getColor(android.R.color.white));
 
                     // Add the slot to its RelativeLayout
                     rl.addView(slot);
+                    availableSlots.add(slot);
 
                     // Add the RelativeLayout container to the main layout
                     wordsContainerLinearLayout.addView(rl);
                 }
             }
         });
+    }
+
+    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
+        if (wordSelectedEvent.isCorrect()) {
+            availableSlots.get(0).setText(wordSelectedEvent.getWord());
+            availableSlots.remove(0);
+        }
     }
 }
