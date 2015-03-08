@@ -30,8 +30,8 @@ public class Helper {
         usedWords.add(firstRndWord);
         availWords.remove(rndIndex);
         // Add its syllables to the chosen list and reducing the number to find
-        syllables.add(new Syllable(firstRndWord.getSyllable1()));
-        syllables.add(new Syllable(firstRndWord.getSyllable2()));
+        syllables.add(Syllable.find(Syllable.class, "val = ?", firstRndWord.getSyllable1()).get(0));
+        syllables.add(Syllable.find(Syllable.class, "val = ?", firstRndWord.getSyllable2()).get(0));
         num -= 2;
 
         if(num == 0){
@@ -56,8 +56,8 @@ public class Helper {
                 if(!usedWords.contains(newWord)){
                     // Add the new syllables
                     usedWords.add(newWord);
-                    Syllable syllable1 = new Syllable(newWord.getSyllable1());
-                    Syllable syllable2 = new Syllable(newWord.getSyllable2());
+                    Syllable syllable1 = Syllable.find(Syllable.class, "val = ?", newWord.getSyllable1()).get(0);
+                    Syllable syllable2 = Syllable.find(Syllable.class, "val = ?", newWord.getSyllable2()).get(0);
                     if(!syllables.contains(syllable1)){
                         its.add(syllable1);
                         num--;
