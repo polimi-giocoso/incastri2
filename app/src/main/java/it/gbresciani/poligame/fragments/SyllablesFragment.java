@@ -39,7 +39,6 @@ import it.gbresciani.poligame.model.Syllable;
  * create an instance of this fragment.
  */
 public class SyllablesFragment extends Fragment {
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String SYLLABLES = "syllables";
 
     private ArrayList<Syllable> syllables;
@@ -107,14 +106,6 @@ public class SyllablesFragment extends Fragment {
         super.onPause();
     }
 
-    private int rndColor() {
-        Random rand = new Random();
-        int r = rand.nextInt(255);
-        int g = rand.nextInt(255);
-        int b = rand.nextInt(255);
-        return Color.rgb(r, g, b);
-    }
-
     /*  Events  */
 
 
@@ -124,6 +115,7 @@ public class SyllablesFragment extends Fragment {
 
         }
     }
+
     @Subscribe public void wordDismissed(WordDismissedEvent wordDismissedEvent) {
         for (CardView card : syllableCards) {
             select(card, false);
@@ -149,11 +141,11 @@ public class SyllablesFragment extends Fragment {
                 int height = syllablesContainerLinearLayout.getMeasuredHeight();
 
                 // To maintain proportions calculates the margin according to the number of slot to be displayed
-                int slotMargin = (int) (( getResources().getDimension(R.dimen.slot_margin)) * 1.5);
+                int slotMargin = (int) ((getResources().getDimension(R.dimen.slot_margin)) * 1.5);
 
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
-                int slotDimen = ( Math.min(width / 2, (height / (syllablesCount / 2))) - 2 * slotMargin);
+                int slotDimen = (Math.min(width / 2, (height / (syllablesCount / 2))) - 2 * slotMargin);
 
                 // Add 2 LinearLayout
                 for (int i = 0; i < syllablesCount; i++) {
@@ -173,7 +165,7 @@ public class SyllablesFragment extends Fragment {
                         syllablesLinearLayout2.addView(ll);
                     }
 
-                    CardView card = createSyllableCard(syllables.get(i).getVal(), slotDimen, slotMargin);
+                    CardView card = createSyllableCard(syllables.get(i), slotDimen, slotMargin);
                     ll.addView(card);
 
                 }
@@ -181,17 +173,17 @@ public class SyllablesFragment extends Fragment {
         });
     }
 
-    private CardView createSyllableCard(String text, int cardDimen, int cardMargin) {
+    private CardView createSyllableCard(Syllable syllable, int cardDimen, int cardMargin) {
 
         CardView syllableCardView = new CardView(mActivity);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardDimen, cardDimen);
         params.setMargins(cardMargin, cardMargin, cardMargin, cardMargin);
         params.gravity = Gravity.CENTER;
         syllableCardView.setLayoutParams(params);
-        syllableCardView.setCardBackgroundColor(rndColor());
+        syllableCardView.setCardBackgroundColor(Color.parseColor(syllable.getColor()));
 
         TextView textView = new TextView(mActivity);
-        textView.setText(text);
+        textView.setText(syllable.getVal());
         textView.setTextSize(100);
         textView.setTextColor(getResources().getColor(android.R.color.white));
         textView.setGravity(Gravity.CENTER);
@@ -260,7 +252,7 @@ public class SyllablesFragment extends Fragment {
             fromScale = 1.5f;
             toScale = 1f;
 
-        } else{
+        } else {
             return;
         }
 
