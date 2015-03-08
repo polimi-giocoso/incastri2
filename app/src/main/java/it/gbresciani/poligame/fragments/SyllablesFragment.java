@@ -27,7 +27,6 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
-import it.gbresciani.poligame.customUIElements.SyllableCard;
 import it.gbresciani.poligame.events.SyllableSelectedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
@@ -178,7 +177,7 @@ public class SyllablesFragment extends Fragment {
 
     private CardView createSyllableCard(String text, int cardDimen, int cardMargin) {
 
-        CardView syllableCardView = new SyllableCard(mActivity);
+        CardView syllableCardView = new CardView(mActivity);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardDimen, cardDimen);
         params.setMargins(cardMargin, cardMargin, cardMargin, cardMargin);
         params.gravity = Gravity.CENTER;
@@ -191,7 +190,6 @@ public class SyllablesFragment extends Fragment {
         textView.setTextColor(getResources().getColor(android.R.color.white));
         textView.setGravity(Gravity.CENTER);
         textView.setAllCaps(true);
-        textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         syllableCardView.addView(textView);
 
