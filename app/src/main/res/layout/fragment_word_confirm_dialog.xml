@@ -1,0 +1,47 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             tools:context="it.gbresciani.poligame.fragments.WordConfirmDialogFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/word_textview"
+        android:textAllCaps="true"
+        android:text="PAROLA"
+        android:textSize="100dp"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="20dp"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ok_button"
+            android:text="OK"
+            android:textColor="@android:color/white"
+            android:textSize="45dp"
+            android:background="@android:color/holo_green_dark"
+            android:layout_weight="1"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/no_button"
+            android:textSize="45dp"
+            android:textColor="@android:color/white"
+            android:text="NO"
+            android:background="@android:color/holo_red_dark"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+</RelativeLayout>
