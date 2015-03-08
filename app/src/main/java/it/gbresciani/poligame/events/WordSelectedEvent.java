@@ -1,23 +1,31 @@
 package it.gbresciani.poligame.events;
 
+import it.gbresciani.poligame.model.Word;
+
 /**
  * Machine State Event representig a word selected
  */
 public class WordSelectedEvent {
 
-    private String word;
+    private Word word;
     private boolean correct;
+    private boolean itsNew;
 
-    public WordSelectedEvent(String word, boolean correct) {
-        this.correct = correct;
+    public WordSelectedEvent(Word word, boolean correct, boolean itsNew) {
         this.word = word;
+        this.correct = correct;
+        this.itsNew = itsNew;
     }
 
-    public String getWord() {
+    public Word getWord() {
         return word;
     }
 
     public boolean isCorrect() {
         return correct;
+    }
+
+    public boolean isNew() {
+        return itsNew;
     }
 }
