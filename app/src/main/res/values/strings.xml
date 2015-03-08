@@ -17,6 +17,8 @@
     <string name="setting_no_syllables_summary">Numero delle sillabe presenti in una schermata</string>
     <string name="label_two_syllables">Due sillabe</string>
     <string name="label_four_syllables">Quattro sillabe</string>
+    <string name="message_end">Partita Terminata!</string>
+    <string name="message_congratulations">Complimenti!</string>
 
 
 </resources>
