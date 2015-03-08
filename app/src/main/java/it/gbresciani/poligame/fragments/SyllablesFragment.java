@@ -28,6 +28,7 @@ import butterknife.InjectView;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
 import it.gbresciani.poligame.events.SyllableSelectedEvent;
+import it.gbresciani.poligame.events.WordDismissedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.model.Syllable;
@@ -120,9 +121,14 @@ public class SyllablesFragment extends Fragment {
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         for (CardView card : syllableCards) {
             select(card, false);
+
         }
     }
-
+    @Subscribe public void wordDismissed(WordDismissedEvent wordDismissedEvent) {
+        for (CardView card : syllableCards) {
+            select(card, false);
+        }
+    }
 
 
     /*  UI Methods  */
