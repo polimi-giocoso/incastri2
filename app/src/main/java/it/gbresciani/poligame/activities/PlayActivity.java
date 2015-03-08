@@ -1,12 +1,16 @@
 package it.gbresciani.poligame.activities;
 
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
@@ -14,11 +18,15 @@ import com.squareup.otto.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.ButterKnife;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.events.PageCompletedEvent;
 import it.gbresciani.poligame.events.SyllableSelectedEvent;
+import it.gbresciani.poligame.events.WordConfirmedEvent;
+import it.gbresciani.poligame.events.WordDismissedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.fragments.SyllablesFragment;
+import it.gbresciani.poligame.fragments.WordConfirmDialogFragment;
 import it.gbresciani.poligame.fragments.WordsFragment;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.helper.Helper;
@@ -29,17 +37,19 @@ import it.gbresciani.poligame.model.Word;
 /**
  * This Activity contains the two fragments (words and syllables) and manages the game logic using bus messages
  */
-public class PlayActivity extends ActionBarActivity {
+public class PlayActivity extends FragmentActivity {
 
     private int noPages;
     private int currentPageNum;
     private int noSyllables;
     private String syllableYetSelected = "";
+    private int backPressedCount = 0;
 
     // Game Page state variables
     private int currentPageWordsToFindNum;
     private ArrayList<Word> currentPageWordsAvailable;
 
+    private Handler timeoutHandler;
     private Bus BUS;
 
     private WordsFragment currentWordsFragment;
@@ -50,6 +60,8 @@ public class PlayActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
         BUS = BusProvider.getInstance();
+        timeoutHandler = new Handler();
+        ButterKnife.inject(this);
 
         // Get match configuration
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -63,12 +75,23 @@ public class PlayActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         BUS.register(this);
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
     }
 
     @Override
     protected void onPause() {
         BUS.unregister(this);
         super.onPause();
+    }
+
+    @Override public void onBackPressed() {
+        if (backPressedCount == 5) {
+            super.onBackPressed();
+        }
+        backPressedCount++;
     }
 
     /**
@@ -109,7 +132,7 @@ public class PlayActivity extends ActionBarActivity {
         Log.d("pageCompleted", String.valueOf(pageCompletedEvent.getPageNumber()) + "/" + String.valueOf(noPages));
 
         if (pageCompletedEvent.getPageNumber() == noPages) {
-            //TODO Partita finita
+            showEndDialog();
             Log.d("pageCompleted", "PARTITA TERMINATA!");
         } else {
             currentPageNum++;
@@ -123,19 +146,36 @@ public class PlayActivity extends ActionBarActivity {
     @Subscribe public void syllableSelected(SyllableSelectedEvent syllableSelectedEvent) {
         if ("".equals(syllableYetSelected)) {
             syllableYetSelected = syllableSelectedEvent.getSyllable();
+            timeoutHandler.postDelayed(new Runnable() {
+                @Override public void run() {
+                    //If no other syllable has been selected dissmiss
+                    if (!"".equals(syllableYetSelected)) {
+                        BUS.post(new WordDismissedEvent());
+                        syllableYetSelected = "";
+                    }
+                }
+            }, 3 * 1000);
         } else {
             String selectedWord = syllableYetSelected + syllableSelectedEvent.getSyllable();
             syllableYetSelected = "";
-            //TODO ask confirmation with dialog
-            Word word = wordByLemma(selectedWord);
-            // If exists and it's new
-            if (word != null) {
-                Log.d("wordSelected", selectedWord + " exists!");
-                BUS.post(new WordSelectedEvent(word, true, currentPageWordsAvailable.contains(word)));
-            } else {
-                Log.d("wordSelected", selectedWord + " does not exists!");
-                BUS.post(new WordSelectedEvent(word, false, false));
-            }
+            showWordConfirmDialog(selectedWord);
+        }
+    }
+
+
+    /**
+     * React to a wordConfirmed
+     */
+    @Subscribe public void wordConfirmed(WordConfirmedEvent wordConfirmedEvent) {
+        String confirmedWordString = wordConfirmedEvent.getWordConfirmed();
+        Word word = wordByLemma(confirmedWordString);
+        // If exists and it's new
+        if (word != null) {
+            Log.d("wordSelected", confirmedWordString + " exists!");
+            BUS.post(new WordSelectedEvent(word, true, currentPageWordsAvailable.contains(word)));
+        } else {
+            Log.d("wordSelected", confirmedWordString + " does not exists!");
+            BUS.post(new WordSelectedEvent(word, false, false));
         }
     }
 
@@ -153,8 +193,6 @@ public class PlayActivity extends ActionBarActivity {
         }
     }
 
-
-
     /*  Helper Methods  */
 
     /**
@@ -170,6 +208,36 @@ public class PlayActivity extends ActionBarActivity {
         } else {
             return null;
         }
+    }
+
+    private void showWordConfirmDialog(String word) {
+        // DialogFragment.show() will take care of adding the fragment
+        // in a transaction.  We also want to remove any currently showing
+        // dialog, so make our own transaction and take care of that here.
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+
+        // Create and show the dialog.
+        WordConfirmDialogFragment wd = WordConfirmDialogFragment.newInstance(word);
+
+        wd.show(ft, "dialog");
+    }
+
+    private void showEndDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // 2. Chain together various setter methods to set the dialog characteristics
+        builder.setMessage(R.string.message_congratulations)
+                .setTitle(R.string.message_end);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+
+        // 3. Get the AlertDialog from create()
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 }
