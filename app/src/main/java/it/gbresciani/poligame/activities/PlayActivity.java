@@ -27,7 +27,7 @@ import it.gbresciani.poligame.model.Word;
 
 
 /**
- * This Activity contains the two fragments (words and syllables) and manages the game logic trough a finite-state machine
+ * This Activity contains the two fragments (words and syllables) and manages the game logic using bus messages
  */
 public class PlayActivity extends ActionBarActivity {
 
@@ -35,7 +35,10 @@ public class PlayActivity extends ActionBarActivity {
     private int currentPageNum;
     private int noSyllables;
     private String syllableYetSelected = "";
-    private int currentPageWordsToFind;
+
+    // Game Page state variables
+    private int currentPageWordsToFindNum;
+    private ArrayList<Word> currentPageWordsAvailable;
 
     private Bus BUS;
 
@@ -77,20 +80,20 @@ public class PlayActivity extends ActionBarActivity {
     }
 
     /**
-     * Initialize a page, adding the two fragments.
+     * Initialize a page, adding the two fragments and passing them the calculated syllables and words
      */
     private void nextPage(int pageNum) {
 
         // Determine words and syllables for the page
         ArrayList<Syllable> syllables = Helper.chooseSyllables(noSyllables);
-        ArrayList<Word> words = Helper.permuteSyllablesInWords(syllables, 2);
+        currentPageWordsAvailable = Helper.permuteSyllablesInWords(syllables, 2);
 
-        currentPageWordsToFind = words.size() <= 4 ? words.size() : 4;
+        currentPageWordsToFindNum = currentPageWordsAvailable.size() <= 4 ? currentPageWordsAvailable.size() : 4;
 
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        currentWordsFragment = WordsFragment.newInstance(words);
+        currentWordsFragment = WordsFragment.newInstance(currentPageWordsAvailable);
         currentSyllablesFragment = SyllablesFragment.newInstance(syllables);
 
         ft.replace(R.id.words_frame_layout, currentWordsFragment);
@@ -99,8 +102,11 @@ public class PlayActivity extends ActionBarActivity {
         ft.commit();
     }
 
+    /**
+     * React to a PageCompletedEvent, opening a new one or ending the game
+     */
     @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
-        Log.d("pageCompleted", String.valueOf(pageCompletedEvent.getPageNumber()) + "/" + String.valueOf(pageCompletedEvent.getPageNumber()));
+        Log.d("pageCompleted", String.valueOf(pageCompletedEvent.getPageNumber()) + "/" + String.valueOf(noPages));
 
         if (pageCompletedEvent.getPageNumber() == noPages) {
             //TODO Partita finita
@@ -111,6 +117,9 @@ public class PlayActivity extends ActionBarActivity {
         }
     }
 
+    /**
+     * React to a SyllableSelectedEvent
+     */
     @Subscribe public void syllableSelected(SyllableSelectedEvent syllableSelectedEvent) {
         if ("".equals(syllableYetSelected)) {
             syllableYetSelected = syllableSelectedEvent.getSyllable();
@@ -118,20 +127,27 @@ public class PlayActivity extends ActionBarActivity {
             String selectedWord = syllableYetSelected + syllableSelectedEvent.getSyllable();
             syllableYetSelected = "";
             //TODO ask confirmation with dialog
-            if(wordExists(selectedWord)){
+            Word word = wordByLemma(selectedWord);
+            // If exists and it's new
+            if (word != null) {
                 Log.d("wordSelected", selectedWord + " exists!");
-                BUS.post(new WordSelectedEvent(selectedWord, true));
-            }else{
+                BUS.post(new WordSelectedEvent(word, true, currentPageWordsAvailable.contains(word)));
+            } else {
                 Log.d("wordSelected", selectedWord + " does not exists!");
-                BUS.post(new WordSelectedEvent(selectedWord, false));
+                BUS.post(new WordSelectedEvent(word, false, false));
             }
         }
     }
 
+    /**
+     * React to a wordSelected
+     */
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
-        if(wordSelectedEvent.isCorrect()){
-            currentPageWordsToFind--;
-            if(currentPageWordsToFind == 0){
+        Word selectedWord = wordSelectedEvent.getWord();
+        if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+            currentPageWordsToFindNum--;
+            currentPageWordsAvailable.remove(selectedWord);
+            if (currentPageWordsToFindNum == 0) {
                 BUS.post(new PageCompletedEvent(currentPageNum));
             }
         }
@@ -141,9 +157,19 @@ public class PlayActivity extends ActionBarActivity {
 
     /*  Helper Methods  */
 
-    private boolean wordExists(String word) {
+    /**
+     * Get a word given its lemma
+     *
+     * @param word The lemma of the word to find.
+     * @return The Word if exists, null if it doesn't
+     */
+    private Word wordByLemma(String word) {
         List<Word> wordFound = Word.find(Word.class, "lemma = ?", word);
-        return wordFound.size() > 0 ? true : false;
+        if (wordFound.size() > 0) {
+            return wordFound.get(0);
+        } else {
+            return null;
+        }
     }
 
 }
