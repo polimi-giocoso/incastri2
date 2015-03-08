@@ -25,7 +25,7 @@ public class Word extends SugarRecord<Word> implements Parcelable {
     public Word() {
     }
 
-    public Word(String lemma, String syllable1, String syllable2, String inverSyllable1, String inverSyllable2) {
+    public Word(String lemma, String syllable1, String syllable2) {
         this.lemma = lemma;
         this.syllable1 = syllable1;
         this.syllable2 = syllable2;
