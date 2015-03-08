@@ -5,7 +5,7 @@
     <dimen name="activity_settings_vertical_margin">64dp</dimen>
     <dimen name="activity_settings_horizontal_margin">250dp</dimen>
 
-    <dimen name="slot_margin">16dp</dimen>
+    <dimen name="slot_margin">48dp</dimen>
     <dimen name="slot_dim_two">230dp</dimen>
     <dimen name="slot_dim_four">130dp</dimen>
 </resources>
