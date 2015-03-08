@@ -5,17 +5,19 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.orm.SugarRecord;
 import com.squareup.otto.Bus;
+import com.squareup.otto.Produce;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import it.gbresciani.poligame.events.LoadingEvent;
+import it.gbresciani.poligame.events.ProgressChangeEvent;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.model.Syllable;
 import it.gbresciani.poligame.model.Word;
@@ -26,7 +28,7 @@ public class InitDBService extends IntentService {
 
     private Gson gson;
     private Bus BUS;
-    private Handler handler = new Handler(Looper.getMainLooper());
+    private int progress;
 
     public InitDBService() {
         super("InitDBService");
@@ -36,11 +38,15 @@ public class InitDBService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
+        Log.d("GiocosoApplication", "onHandleIntent");
+
+
         BUS = BusProvider.getInstance();
         BUS.register(this);
 
         AssetManager assetManager = getAssets();
-        BUS.post(new LoadingEvent(LoadingEvent.STATE_STARTED));
+        progress = 0;
+        BUS.post(new ProgressChangeEvent(progress));
 
         try {
             InputStream JSONInputStreamWords = assetManager.open("words.json");
@@ -52,8 +58,15 @@ public class InitDBService extends IntentService {
             e.printStackTrace();
         }
 
-        BUS.post(new LoadingEvent(LoadingEvent.STATE_FINISHED));
+        progress = 100;
+        BUS.post(new ProgressChangeEvent(progress));
     }
+
+    @Produce public ProgressChangeEvent produceProgress() {
+        return new ProgressChangeEvent(progress);
+    }
+
+
 
     @Override
     public void onDestroy() {
@@ -76,6 +89,7 @@ public class InitDBService extends IntentService {
         reader.endArray();
         reader.close();
     }
+
     /*
     * Parses the input stream and returns a List of Syllables objects
     */
