@@ -3,6 +3,8 @@ package it.gbresciani.poligame.fragments;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +36,7 @@ public class WordsFragment extends Fragment {
     private List<Word> words;
     private PlayActivity mActivity;
     private Bus BUS;
-    private ArrayList<TextView> availableSlots = new ArrayList<>();
+    private ArrayList<CardView> availableSlots = new ArrayList<>();
 
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
@@ -125,17 +127,21 @@ public class WordsFragment extends Fragment {
                     rl.setLayoutParams(rParams);
 
                     // Create the slot View and add it to the RelativeLayout container
-                    TextView slot = new TextView(mActivity);
+                    CardView card = new CardView(mActivity);
                     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
                     params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
                     params.addRule(RelativeLayout.CENTER_IN_PARENT);
-                    slot.setBackgroundResource(R.drawable.shape_empty_slot);
-                    slot.setLayoutParams(params);
-                    slot.setTextColor(getResources().getColor(android.R.color.white));
+                    card.setLayoutParams(params);
+                    TextView slot = new TextView(mActivity);
+                    slot.setGravity(Gravity.CENTER);
+                    slot.setTextSize(50);
+                    slot.setAllCaps(true);
 
                     // Add the slot to its RelativeLayout
-                    rl.addView(slot);
-                    availableSlots.add(slot);
+                    card.addView(slot);
+                    card.setCardElevation(0);
+                    rl.addView(card);
+                    availableSlots.add(card);
 
                     // Add the RelativeLayout container to the main layout
                     wordsContainerLinearLayout.addView(rl);
@@ -145,8 +151,9 @@ public class WordsFragment extends Fragment {
     }
 
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
-        if (wordSelectedEvent.isCorrect()) {
-            availableSlots.get(0).setText(wordSelectedEvent.getWord());
+        if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+            ((TextView) availableSlots.get(0).getChildAt(0)).setText(wordSelectedEvent.getWord().getLemma());
+            availableSlots.get(0).setCardElevation(10);
             availableSlots.remove(0);
         }
     }
