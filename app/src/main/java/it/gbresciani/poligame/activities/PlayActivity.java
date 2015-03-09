@@ -75,10 +75,7 @@ public class PlayActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         BUS.register(this);
-        View decorView = getWindow().getDecorView();
-        // Hide the status bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
+        hideStatusBar();
     }
 
     @Override
@@ -238,6 +235,13 @@ public class PlayActivity extends FragmentActivity {
         // 3. Get the AlertDialog from create()
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private void hideStatusBar() {
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
     }
 
 }

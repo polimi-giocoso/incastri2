@@ -41,10 +41,7 @@ public class MainActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         BUS.register(this);
-        View decorView = getWindow().getDecorView();
-        // Hide the status bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
+        hideStatusBar();
     }
 
     @Override
@@ -91,6 +88,13 @@ public class MainActivity extends FragmentActivity {
         }else{
             BUS.post(new ProgressChangeEvent(100));
         }
+    }
+
+    private void hideStatusBar() {
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
     }
 
 }

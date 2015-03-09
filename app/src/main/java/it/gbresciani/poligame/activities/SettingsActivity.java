@@ -1,14 +1,16 @@
 package it.gbresciani.poligame.activities;
 
+import android.app.Activity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.fragments.SettingsFragment;
 
-public class SettingsActivity extends ActionBarActivity {
+public class SettingsActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +21,11 @@ public class SettingsActivity extends ActionBarActivity {
                 .commit();
     }
 
+
+    @Override protected void onResume() {
+        super.onResume();
+        hideStatusBar();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -40,5 +47,11 @@ public class SettingsActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    private void hideStatusBar() {
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
     }
 }
