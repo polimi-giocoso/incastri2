@@ -1,16 +1,13 @@
 package it.gbresciani.poligame.fragments;
 
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.squareup.otto.Bus;
@@ -76,6 +73,14 @@ public class WordConfirmDialogFragment extends DialogFragment {
         super.onPause();
     }
 
+    @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+
+        dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+
+        return dialog;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -88,13 +93,13 @@ public class WordConfirmDialogFragment extends DialogFragment {
     }
 
     @OnClick(R.id.ok_button)
-    public void ok(){
+    public void ok() {
         BUS.post(new WordConfirmedEvent(word));
         this.dismiss();
     }
 
     @OnClick(R.id.no_button)
-    public void no(){
+    public void no() {
         BUS.post(new WordDismissedEvent());
         this.dismiss();
     }
