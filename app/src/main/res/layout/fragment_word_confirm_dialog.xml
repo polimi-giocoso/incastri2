@@ -1,21 +1,49 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="wrap_content"
+             android:layout_width="900dp"
              android:layout_height="wrap_content"
              android:orientation="vertical"
              android:gravity="center_horizontal"
              tools:context="it.gbresciani.poligame.fragments.WordConfirmDialogFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/word_textview"
-        android:textAllCaps="true"
-        android:padding="@dimen/dialog_word_padding"
-        android:layout_margin="@dimen/dialog_word_margin"
-        android:text="PAROLA"
-        android:textSize="100dp"/>
+
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="350dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/word_textview"
+            android:textAllCaps="true"
+            android:padding="@dimen/dialog_word_padding"
+            android:visibility="visible"
+            android:text="PAROLA"
+            android:textSize="100dp"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
+
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:id="@+id/correct_imageview"
+            android:src="@drawable/ic_correct"
+            android:visibility="gone"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
+
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:id="@+id/wrong_imageview"
+            android:src="@drawable/ic_wrong"
+            android:visibility="gone"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -31,7 +59,7 @@
             android:textColor="@android:color/white"
             android:textSize="45dp"
             android:padding="@dimen/dialog_button_padding"
-            android:background="@android:color/holo_green_dark"
+            android:background="@drawable/dialog_button_ok_bg_sel"
             android:layout_weight="1"/>
 
         <Button
@@ -42,7 +70,7 @@
             android:textColor="@android:color/white"
             android:text="NO"
             android:padding="@dimen/dialog_button_padding"
-            android:background="@android:color/holo_red_dark"
+            android:background="@drawable/dialog_button_no_bg_sel"
             android:layout_weight="1"/>
     </LinearLayout>
 
