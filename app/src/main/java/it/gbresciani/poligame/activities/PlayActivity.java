@@ -5,6 +5,9 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -51,6 +54,11 @@ public class PlayActivity extends FragmentActivity {
 
     private Handler timeoutHandler;
     private Bus BUS;
+    private SoundPool soundPool;
+
+    private int correctSound;
+    private int wrongSound;
+    private int sameSound;
 
     private WordsFragment currentWordsFragment;
     private SyllablesFragment currentSyllablesFragment;
@@ -63,10 +71,8 @@ public class PlayActivity extends FragmentActivity {
         timeoutHandler = new Handler();
         ButterKnife.inject(this);
 
-        // Get match configuration
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        noPages = sp.getInt(getString(R.string.setting_no_pages_key), 1);
-        noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
+        loadPref();
+        loadSound();
 
         startGame();
     }
@@ -182,15 +188,39 @@ public class PlayActivity extends FragmentActivity {
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+            soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
             currentPageWordsToFindNum--;
             currentPageWordsAvailable.remove(selectedWord);
             if (currentPageWordsToFindNum == 0) {
                 BUS.post(new PageCompletedEvent(currentPageNum));
             }
+        } else if (wordSelectedEvent.isCorrect() && !wordSelectedEvent.isNew()) {
+            soundPool.play(sameSound, 1f, 1f, 0, 0, 1f);
+        } else {
+            soundPool.play(wrongSound, 1f, 1f, 0, 0, 1f);
         }
     }
 
     /*  Helper Methods  */
+
+
+    private void loadSound() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            soundPool = (new SoundPool.Builder()).build();
+        } else {
+            soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        }
+        correctSound = soundPool.load(this, R.raw.correct, 1);
+        wrongSound = soundPool.load(this, R.raw.wrong, 1);
+        sameSound = soundPool.load(this, R.raw.same, 1);
+    }
+
+    private void loadPref() {
+        // Get match configuration
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        noPages = sp.getInt(getString(R.string.setting_no_pages_key), 1);
+        noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
+    }
 
     /**
      * Get a word given its lemma
@@ -219,7 +249,7 @@ public class PlayActivity extends FragmentActivity {
         wd.show(ft, "dialog");
     }
 
-    private void showEndDialog(){
+    private void showEndDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         // 2. Chain together various setter methods to set the dialog characteristics
