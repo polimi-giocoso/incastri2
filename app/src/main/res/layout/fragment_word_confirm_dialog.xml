@@ -1,6 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="900dp"
+             android:layout_width="@dimen/word_confirmed_dialog_width"
              android:layout_height="wrap_content"
              android:orientation="vertical"
              android:gravity="center_horizontal"
@@ -11,8 +11,8 @@
 
     <RelativeLayout
         android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="350dp">
+        android:layout_width="@dimen/word_confirmed_dialog_width"
+        android:layout_height="@dimen/word_confirmed_dialog_height">
 
         <TextView
             android:layout_width="wrap_content"
@@ -21,28 +21,12 @@
             android:textAllCaps="true"
             android:padding="@dimen/dialog_word_padding"
             android:visibility="visible"
-            android:text="PAROLA"
-            android:textSize="100dp"
+            android:textStyle="bold"
+            android:text="WORD"
+            android:textSize="@dimen/dialog_text_size"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"/>
 
-        <ImageView
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:id="@+id/correct_imageview"
-            android:src="@drawable/ic_correct"
-            android:visibility="gone"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true"/>
-
-        <ImageView
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:id="@+id/wrong_imageview"
-            android:src="@drawable/ic_wrong"
-            android:visibility="gone"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true"/>
     </RelativeLayout>
 
     <LinearLayout
@@ -51,26 +35,24 @@
         android:layout_height="wrap_content"
         android:id="@+id/linearLayout">
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/ok_button"
-            android:text="OK"
-            android:textColor="@android:color/white"
-            android:textSize="45dp"
-            android:padding="@dimen/dialog_button_padding"
+            android:paddingBottom="@dimen/dialog_button_padding"
+            android:paddingTop="@dimen/dialog_button_padding"
             android:background="@drawable/dialog_button_ok_bg_sel"
+            android:src="@drawable/ic_correct_white"
             android:layout_weight="1"/>
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/no_button"
-            android:textSize="45dp"
-            android:textColor="@android:color/white"
-            android:text="NO"
-            android:padding="@dimen/dialog_button_padding"
+            android:paddingBottom="@dimen/dialog_button_padding"
+            android:paddingTop="@dimen/dialog_button_padding"
             android:background="@drawable/dialog_button_no_bg_sel"
+            android:src="@drawable/ic_wrong_white"
             android:layout_weight="1"/>
     </LinearLayout>
 
