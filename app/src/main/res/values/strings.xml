@@ -19,6 +19,7 @@
     <string name="label_four_syllables">Quattro sillabe</string>
     <string name="message_end">Partita Terminata!</string>
     <string name="message_congratulations">Complimenti!</string>
+    <string name="no_tts_message">No TTS support</string>
 
 
 </resources>
