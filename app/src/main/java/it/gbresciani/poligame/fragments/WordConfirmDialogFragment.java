@@ -1,22 +1,20 @@
 package it.gbresciani.poligame.fragments;
 
 
+import android.animation.Animator;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Property;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.ScaleAnimation;
-import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.squareup.otto.Bus;
@@ -37,10 +35,8 @@ public class WordConfirmDialogFragment extends DialogFragment {
 
     private String word;
     @InjectView(R.id.word_textview) TextView wordTextView;
-    @InjectView(R.id.wrong_imageview) ImageView wrongImageView;
-    @InjectView(R.id.correct_imageview) ImageView correctImageView;
-    @InjectView(R.id.ok_button) Button okButton;
-    @InjectView(R.id.no_button) Button noButton;
+    @InjectView(R.id.ok_button) ImageButton okButton;
+    @InjectView(R.id.no_button) ImageButton noButton;
 
     private Bus BUS;
     private Dialog dialog;
@@ -122,44 +118,42 @@ public class WordConfirmDialogFragment extends DialogFragment {
         dialog.dismiss();
     }
 
-    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent){
+    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
 
-        //TODO define animation in xml
-        final WordSelectedEvent event = wordSelectedEvent;
-        AnimationSet animSet = new AnimationSet(true);
-        animSet.setInterpolator(new AccelerateInterpolator());
-        animSet.setFillAfter(true);
+        final Property<TextView, Integer> property = new Property<TextView, Integer>(int.class, "textColor") {
+            @Override
+            public Integer get(TextView object) {
+                return object.getCurrentTextColor();
+            }
 
-        ScaleAnimation scaleAnimation = new ScaleAnimation(1f, 0f, 1f, 0f,
-                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
-                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
-        scaleAnimation.setDuration(450);
+            @Override
+            public void set(TextView object, Integer value) {
+                object.setTextColor(value);
+            }
+        };
 
-        animSet.addAnimation(scaleAnimation);
+        final ObjectAnimator animator;
+        if (wordSelectedEvent.isCorrect()) {
+            if (wordSelectedEvent.isNew()) {
+                animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.holo_green_light));
+            } else {
+                // Skip color animation
+                dialog.dismiss();
+                return;
+            }
+        } else {
+            animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.holo_red_light));
+        }
+        animator.setDuration(200);
+        animator.setEvaluator(new ArgbEvaluator());
+        animator.setInterpolator(new AccelerateInterpolator(1));
 
-        final AnimationSet animSet2 = new AnimationSet(true);
-        animSet.setInterpolator(new AccelerateInterpolator());
-        animSet.setFillAfter(true);
-
-        ScaleAnimation scaleAnimation2 = new ScaleAnimation(0f, 1f, 0f, 1f,
-                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
-                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
-        scaleAnimation2.setDuration(450);
-
-        animSet2.addAnimation(scaleAnimation2);
-        animSet.setAnimationListener(new Animation.AnimationListener() {
-            @Override public void onAnimationStart(Animation animation) {
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override public void onAnimationStart(Animator animation) {
 
             }
 
-            @Override public void onAnimationEnd(Animation animation) {
-                if(event.isCorrect()){
-                    correctImageView.setVisibility(View.VISIBLE);
-                    correctImageView.startAnimation(animSet2);
-                }else{
-                    wrongImageView.setVisibility(View.VISIBLE);
-                    wrongImageView.startAnimation(animSet2);
-                }
+            @Override public void onAnimationEnd(Animator animation) {
                 (new Handler()).postDelayed(new Runnable() {
                     @Override public void run() {
                         dialog.dismiss();
@@ -167,13 +161,20 @@ public class WordConfirmDialogFragment extends DialogFragment {
                 }, 1000);
             }
 
-            @Override public void onAnimationRepeat(Animation animation) {
+            @Override public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override public void onAnimationRepeat(Animator animation) {
 
             }
         });
 
-        wordTextView.startAnimation(animSet);
+        animator.start();
+    }
 
+    private void speakWords(String speech) {
+        //implement TTS here
     }
 
 
