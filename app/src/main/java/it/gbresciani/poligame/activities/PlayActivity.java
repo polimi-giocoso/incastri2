@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -11,15 +12,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.ButterKnife;
 import it.gbresciani.poligame.R;
@@ -60,6 +64,10 @@ public class PlayActivity extends FragmentActivity {
     private int wrongSound;
     private int sameSound;
 
+    private TextToSpeech mTTS;
+    private boolean ttsConfigured = false;
+    private int TTS_CHECK = 0;
+
     private WordsFragment currentWordsFragment;
     private SyllablesFragment currentSyllablesFragment;
 
@@ -73,6 +81,7 @@ public class PlayActivity extends FragmentActivity {
 
         loadPref();
         loadSound();
+        checkTTS();
 
         startGame();
     }
@@ -188,9 +197,14 @@ public class PlayActivity extends FragmentActivity {
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+            // Play correct sound
             soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
+            // Update number of words to found
             currentPageWordsToFindNum--;
             currentPageWordsAvailable.remove(selectedWord);
+            // Pronounce the word
+            sayWord(selectedWord);
+            // Check if page is completed
             if (currentPageWordsToFindNum == 0) {
                 BUS.post(new PageCompletedEvent(currentPageNum));
             }
@@ -203,6 +217,18 @@ public class PlayActivity extends FragmentActivity {
 
     /*  Helper Methods  */
 
+
+    private void sayWord(Word selectedWord) {
+        if (ttsConfigured) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mTTS.speak(selectedWord.getLemma(), TextToSpeech.QUEUE_FLUSH, null, selectedWord.getLemma());
+            } else {
+                mTTS.speak(selectedWord.getLemma(), TextToSpeech.QUEUE_FLUSH, null);
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
+        }
+    }
 
     private void loadSound() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -272,6 +298,41 @@ public class PlayActivity extends FragmentActivity {
         // Hide the status bar.
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
+    }
+
+
+    private void checkTTS() {
+        Intent checkTTSIntent = new Intent();
+        checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(checkTTSIntent, TTS_CHECK);
+    }
+
+    /**
+     * Called on TTS check
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == TTS_CHECK) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                    @Override public void onInit(int status) {
+                        ttsConfigured = true;
+                        setTTSLang(Locale.ITALIAN);
+                    }
+                });
+            } else {
+                Intent installTTSIntent = new Intent();
+                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installTTSIntent);
+            }
+        }
+    }
+
+    private void setTTSLang(Locale locale){
+        if(ttsConfigured){
+            mTTS.setLanguage(locale);
+        }else{
+            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
+        }
     }
 
 }
