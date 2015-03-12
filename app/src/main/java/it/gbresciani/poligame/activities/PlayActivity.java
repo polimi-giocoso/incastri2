@@ -251,9 +251,9 @@ public class PlayActivity extends FragmentActivity {
     private void say(String string) {
         if (ttsConfigured) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mTTS.speak(string, TextToSpeech.QUEUE_FLUSH, null, string);
+                mTTS.speak(string, TextToSpeech.QUEUE_ADD, null, string);
             } else {
-                mTTS.speak(string, TextToSpeech.QUEUE_FLUSH, null);
+                mTTS.speak(string, TextToSpeech.QUEUE_ADD, null);
             }
         } else {
             Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
