@@ -6,22 +6,20 @@
               tools:context=".MainActivity">
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:background="@drawable/play_bg"
+        android:orientation="horizontal">
 
         <FrameLayout
             android:id="@+id/words_frame_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="3">
+            android:layout_margin="@dimen/left_pane_margin"
+            android:layout_weight="3"
+            android:background="@drawable/left_pane_bg">
         </FrameLayout>
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@android:color/darker_gray">
-        </View>
 
         <FrameLayout
             android:id="@+id/syllables_frame_layout"
