@@ -156,8 +156,9 @@ public class PlayActivity extends FragmentActivity {
      * React to a SyllableSelectedEvent
      */
     @Subscribe public void syllableSelected(SyllableSelectedEvent syllableSelectedEvent) {
+        say(syllableSelectedEvent.getSyllable().getVal());
         if ("".equals(syllableYetSelected)) {
-            syllableYetSelected = syllableSelectedEvent.getSyllable();
+            syllableYetSelected = syllableSelectedEvent.getSyllable().getVal();
             timeoutHandler.postDelayed(new Runnable() {
                 @Override public void run() {
                     //If no other syllable has been selected dissmiss
@@ -168,7 +169,7 @@ public class PlayActivity extends FragmentActivity {
                 }
             }, 3 * 1000);
         } else {
-            String selectedWord = syllableYetSelected + syllableSelectedEvent.getSyllable();
+            String selectedWord = syllableYetSelected + syllableSelectedEvent.getSyllable().getVal();
             syllableYetSelected = "";
             showWordConfirmDialog(selectedWord);
         }
@@ -203,7 +204,6 @@ public class PlayActivity extends FragmentActivity {
             currentPageWordsToFindNum--;
             currentPageWordsAvailable.remove(selectedWord);
             // Pronounce the word
-            sayWord(selectedWord);
             // Check if page is completed
             if (currentPageWordsToFindNum == 0) {
                 BUS.post(new PageCompletedEvent(currentPageNum));
@@ -218,12 +218,12 @@ public class PlayActivity extends FragmentActivity {
     /*  Helper Methods  */
 
 
-    private void sayWord(Word selectedWord) {
+    private void say(String string) {
         if (ttsConfigured) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mTTS.speak(selectedWord.getLemma(), TextToSpeech.QUEUE_FLUSH, null, selectedWord.getLemma());
+                mTTS.speak(string, TextToSpeech.QUEUE_FLUSH, null, string);
             } else {
-                mTTS.speak(selectedWord.getLemma(), TextToSpeech.QUEUE_FLUSH, null);
+                mTTS.speak(string, TextToSpeech.QUEUE_FLUSH, null);
             }
         } else {
             Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
