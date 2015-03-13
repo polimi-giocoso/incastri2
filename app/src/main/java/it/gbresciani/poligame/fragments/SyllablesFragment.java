@@ -32,6 +32,7 @@ import it.gbresciani.poligame.events.SyllableSelectedEvent;
 import it.gbresciani.poligame.events.WordDismissedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
+import it.gbresciani.poligame.helper.Helper;
 import it.gbresciani.poligame.model.Syllable;
 
 /**
@@ -307,40 +308,9 @@ public class SyllablesFragment extends Fragment {
         BitmapFactory.decodeStream(ims, null, options);
 
         // Calculate inSampleSize
-        options.inSampleSize = calculateSyllableImageSize(options, reqWidth, reqHeight);
+        options.inSampleSize = Helper.calculateBitmapSize(options, reqWidth, reqHeight);
 
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeStream(ims, null, options);
-    }
-
-
-    /**
-     * Calculates the options.inSampleSize to decode the image in a smaller size to prevent java.lang.OutofMemoryError
-     *
-     * @param options   the options of the bitmap decoder containing height and width calculated with options.inJustDecodeBounds
-     * @param reqWidth  the desired image width
-     * @param reqHeight the desired image height
-     * @return the size of the desired bitmap
-     */
-    public static int calculateSyllableImageSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight
-                    && (halfWidth / inSampleSize) > reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
     }
 }
