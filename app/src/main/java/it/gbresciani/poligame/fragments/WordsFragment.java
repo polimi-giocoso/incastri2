@@ -2,6 +2,7 @@ package it.gbresciani.poligame.fragments;
 
 
 import android.app.Fragment;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.view.Gravity;
@@ -9,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -16,6 +18,8 @@ import android.widget.TextView;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +29,8 @@ import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
+import it.gbresciani.poligame.helper.Helper;
+import it.gbresciani.poligame.model.Syllable;
 import it.gbresciani.poligame.model.Word;
 
 /**
@@ -36,7 +42,7 @@ public class WordsFragment extends Fragment {
     private List<Word> words;
     private PlayActivity mActivity;
     private Bus BUS;
-    private ArrayList<CardView> availableSlots = new ArrayList<>();
+    private ArrayList<ImageView> availableSlots = new ArrayList<>();
 
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
@@ -110,12 +116,9 @@ public class WordsFragment extends Fragment {
                 int width = wordsContainerLinearLayout.getMeasuredWidth();
                 int height = wordsContainerLinearLayout.getMeasuredHeight();
 
-                // To maintain proportions calculates the margin according to the number of slot to be displayed
-                int slotMargin = ((int) getResources().getDimension(R.dimen.slot_margin)) / wordsToFind;
-
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
-                int slotDimen = Math.min(width, (height / wordsToFind)) - 2 * slotMargin;
+                int slotDimen = Math.min(width, (height / wordsToFind));
 
                 // Draw as much slots as needed
                 for (int i = 0; i < wordsToFind; i++) {
@@ -127,21 +130,14 @@ public class WordsFragment extends Fragment {
                     rl.setLayoutParams(rParams);
 
                     // Create the slot View and add it to the RelativeLayout container
-                    CardView card = new CardView(mActivity);
+                    ImageView imageView = new ImageView(mActivity);
                     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
-                    params.setMargins(slotMargin, slotMargin, slotMargin, slotMargin);
                     params.addRule(RelativeLayout.CENTER_IN_PARENT);
-                    card.setLayoutParams(params);
-                    TextView slot = new TextView(mActivity);
-                    slot.setGravity(Gravity.CENTER);
-                    slot.setTextSize(50);
-                    slot.setAllCaps(true);
+                    imageView.setLayoutParams(params);
+                    imageView.setBackgroundResource(R.drawable.word_slot);
 
-                    // Add the slot to its RelativeLayout
-                    card.addView(slot);
-                    card.setCardElevation(0);
-                    rl.addView(card);
-                    availableSlots.add(card);
+                    rl.addView(imageView);
+                    availableSlots.add(imageView);
 
                     // Add the RelativeLayout container to the main layout
                     wordsContainerLinearLayout.addView(rl);
@@ -152,9 +148,35 @@ public class WordsFragment extends Fragment {
 
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
-            ((TextView) availableSlots.get(0).getChildAt(0)).setText(wordSelectedEvent.getWord().getLemma());
-            availableSlots.get(0).setCardElevation(10);
             availableSlots.remove(0);
         }
+    }
+
+
+
+    /**
+     * Load the word slot
+     *
+     * @return The Bitmap corresponding to the syllable
+     */
+    private android.graphics.Bitmap loadWordBitmap(int reqWidth, int reqHeight) {
+
+        InputStream ims = null;
+        try {
+            ims = mActivity.getAssets().open("syllable_images/.png");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Decode with inJustDecodeBounds=true to check dimensions
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(ims, null, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = Helper.calculateBitmapSize(options, reqWidth, reqHeight);
+
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeStream(ims, null, options);
     }
 }
