@@ -15,4 +15,5 @@
     <dimen name="word_confirmed_dialog_width">600dp</dimen>
     <dimen name="word_confirmed_dialog_height">350dp</dimen>
     <dimen name="dialog_text_size">150dp</dimen>
+    <dimen name="left_pane_margin">30dp</dimen>
 </resources>
