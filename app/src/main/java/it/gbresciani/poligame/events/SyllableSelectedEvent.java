@@ -1,14 +1,16 @@
 package it.gbresciani.poligame.events;
 
+import it.gbresciani.poligame.model.Syllable;
+
 public class SyllableSelectedEvent {
 
-    private String syllable;
+    private Syllable syllable;
 
-    public SyllableSelectedEvent(String syllable) {
+    public SyllableSelectedEvent(Syllable syllable) {
         this.syllable = syllable;
     }
 
-    public String getSyllable() {
+    public Syllable getSyllable() {
         return syllable;
     }
 }
