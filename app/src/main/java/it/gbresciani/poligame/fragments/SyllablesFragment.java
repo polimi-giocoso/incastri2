@@ -175,21 +175,12 @@ public class SyllablesFragment extends Fragment {
 
     private CardView createSyllableCard(Syllable syllable, int cardDimen, int cardMargin) {
 
-        CardView syllableCardView = new CardView(mActivity);
+        final CardView syllableCardView = new CardView(mActivity);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardDimen, cardDimen);
         params.setMargins(cardMargin, cardMargin, cardMargin, cardMargin);
         params.gravity = Gravity.CENTER;
         syllableCardView.setLayoutParams(params);
         syllableCardView.setCardBackgroundColor(Color.parseColor(syllable.getColor()));
-
-        TextView textView = new TextView(mActivity);
-        textView.setText(syllable.getVal());
-        textView.setTextSize(100);
-        textView.setTextColor(getResources().getColor(android.R.color.white));
-        textView.setGravity(Gravity.CENTER);
-        textView.setAllCaps(true);
-
-        syllableCardView.addView(textView);
 
         // Choose a random rotation angle between -25 and 25
         final int degree = rnd.nextInt(50) - 25;
@@ -218,8 +209,9 @@ public class SyllablesFragment extends Fragment {
 
         syllableCardView.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                // Get the only child view that is a TextView
-                String syllable = (String) ((TextView) ((CardView) v).getChildAt(0)).getText();
+                // Get the Syllable based on the index of the selected view
+                //TODO Use HashMap
+                Syllable syllable = syllables.get(syllableCards.indexOf(v));
                 select(v, true);
                 BUS.post(new SyllableSelectedEvent(syllable));
             }
