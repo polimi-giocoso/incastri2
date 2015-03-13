@@ -2,9 +2,8 @@ package it.gbresciani.poligame.fragments;
 
 
 import android.app.Fragment;
-import android.graphics.Color;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,12 +13,14 @@ import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -45,9 +46,9 @@ public class SyllablesFragment extends Fragment {
     private PlayActivity mActivity;
     private Bus BUS;
     private Random rnd = new Random();
-    private ArrayList<CardView> syllableCards = new ArrayList<>();
-    private ArrayList<Integer> syllableCardRotationDegree = new ArrayList<>();
-    private ArrayList<Boolean> syllableCardSelection = new ArrayList<>();
+    private ArrayList<View> syllableViews = new ArrayList<>();
+    private ArrayList<Integer> syllableViewRotationDegree = new ArrayList<>();
+    private ArrayList<Boolean> syllableViewSelection = new ArrayList<>();
 
 
     @InjectView(R.id.syllables_container) LinearLayout syllablesContainerLinearLayout;
@@ -110,15 +111,15 @@ public class SyllablesFragment extends Fragment {
 
 
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
-        for (CardView card : syllableCards) {
-            select(card, false);
+        for (View view : syllableViews) {
+            select(view, false);
 
         }
     }
 
     @Subscribe public void wordDismissed(WordDismissedEvent wordDismissedEvent) {
-        for (CardView card : syllableCards) {
-            select(card, false);
+        for (View view : syllableViews) {
+            select(view, false);
         }
     }
 
@@ -165,22 +166,24 @@ public class SyllablesFragment extends Fragment {
                         syllablesLinearLayout2.addView(ll);
                     }
 
-                    CardView card = createSyllableCard(syllables.get(i), slotDimen, slotMargin);
-                    ll.addView(card);
+                    View view = createSyllableView(syllables.get(i), slotDimen, slotMargin);
+                    ll.addView(view);
 
                 }
             }
         });
     }
 
-    private CardView createSyllableCard(Syllable syllable, int cardDimen, int cardMargin) {
+    private View createSyllableView(Syllable syllable, int cardDimen, int cardMargin) {
 
-        final CardView syllableCardView = new CardView(mActivity);
+        final ImageView syllableView = new ImageView(mActivity);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardDimen, cardDimen);
         params.setMargins(cardMargin, cardMargin, cardMargin, cardMargin);
         params.gravity = Gravity.CENTER;
-        syllableCardView.setLayoutParams(params);
-        syllableCardView.setCardBackgroundColor(Color.parseColor(syllable.getColor()));
+        syllableView.setLayoutParams(params);
+
+
+        syllableView.setImageBitmap(loadSyllableBitmap(syllable, cardDimen, cardDimen));
 
         // Choose a random rotation angle between -25 and 25
         final int degree = rnd.nextInt(50) - 25;
@@ -205,29 +208,36 @@ public class SyllablesFragment extends Fragment {
         animSet.addAnimation(scaleAnimation);
         animSet.addAnimation(rotateAnimation);
 
-        syllableCardView.startAnimation(animSet);
+        syllableView.startAnimation(animSet);
 
-        syllableCardView.setOnClickListener(new View.OnClickListener() {
+        syllableView.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 // Get the Syllable based on the index of the selected view
                 //TODO Use HashMap
-                Syllable syllable = syllables.get(syllableCards.indexOf(v));
+                Syllable syllable = syllables.get(syllableViews.indexOf(v));
                 select(v, true);
                 BUS.post(new SyllableSelectedEvent(syllable));
             }
         });
 
-        syllableCards.add(syllableCardView);
-        syllableCardRotationDegree.add(degree);
-        syllableCardSelection.add(false);
+        syllableViews.add(syllableView);
+        syllableViewRotationDegree.add(degree);
+        syllableViewSelection.add(false);
 
-        return syllableCardView;
+        return syllableView;
     }
 
+    /**
+     *
+     * Put the given view in a "selected" or "unselected"
+     *
+     * @param v The view to select
+     * @param selected Whether if select or unselect
+     */
     private void select(View v, boolean selected) {
-        int cardIndex = syllableCards.indexOf(v);
-        float viewDegree = syllableCardRotationDegree.get(cardIndex);
-        boolean viewSelection = syllableCardSelection.get(cardIndex);
+        int cardIndex = syllableViews.indexOf(v);
+        float viewDegree = syllableViewRotationDegree.get(cardIndex);
+        boolean viewSelection = syllableViewSelection.get(cardIndex);
         float toDegree;
         float fromDegree;
         float toScale;
@@ -271,6 +281,66 @@ public class SyllablesFragment extends Fragment {
         animSet.addAnimation(rotateAnimation);
 
         v.startAnimation(animSet);
-        syllableCardSelection.set(cardIndex, selected);
+        syllableViewSelection.set(cardIndex, selected);
+    }
+
+
+    /**
+     *
+     * Given a Syllable load the corresponding Bitmap
+     *
+     * @param syllable
+     * @return The Bitmap corresponding to the syllable
+     */
+    private android.graphics.Bitmap loadSyllableBitmap(Syllable syllable, int reqWidth, int reqHeight) {
+
+        InputStream ims = null;
+        try {
+            ims = mActivity.getAssets().open("syllable_images/" + syllable.getVal() + ".png");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Decode with inJustDecodeBounds=true to check dimensions
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(ims, null, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateSyllableImageSize(options, reqWidth, reqHeight);
+
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeStream(ims, null, options);
+    }
+
+
+    /**
+     * Calculates the options.inSampleSize to decode the image in a smaller size to prevent java.lang.OutofMemoryError
+     *
+     * @param options   the options of the bitmap decoder containing height and width calculated with options.inJustDecodeBounds
+     * @param reqWidth  the desired image width
+     * @param reqHeight the desired image height
+     * @return the size of the desired bitmap
+     */
+    public static int calculateSyllableImageSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
     }
 }
