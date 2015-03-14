@@ -22,7 +22,6 @@
             android:padding="@dimen/dialog_word_padding"
             android:visibility="visible"
             android:textStyle="bold"
-            android:text="WORD"
             android:textSize="@dimen/dialog_text_size"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"/>
