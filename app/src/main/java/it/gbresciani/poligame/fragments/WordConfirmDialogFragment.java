@@ -149,7 +149,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
                     @Override public void run() {
                         dismiss();
                     }
-                }, 1000);
+                }, 500);
             }
 
             @Override public void onAnimationCancel(Animator animation) {
