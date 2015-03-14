@@ -312,6 +312,11 @@ public class SyllablesFragment extends Fragment {
         options.inSampleSize = Helper.calculateBitmapSize(options, reqWidth, reqHeight);
 
         options.inJustDecodeBounds = false;
+        try {
+            ims.reset();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return BitmapFactory.decodeStream(ims, null, options);
     }
 }
