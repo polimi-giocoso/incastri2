@@ -13,13 +13,13 @@ import it.gbresciani.poligame.R;
 /**
  * Custom preference to choose the number of syllables
  */
-public class NOSyllablesPreference extends DialogPreference {
+public class SyllablesPreference extends DialogPreference {
 
     private int defaultNumber = 4;
 
     @InjectView(R.id.syllables_radio_group) RadioGroup syllablesRadioGroup;
 
-    public NOSyllablesPreference(Context context, AttributeSet attrs) {
+    public SyllablesPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setDialogLayoutResource(R.layout.dialog_no_syllables);
