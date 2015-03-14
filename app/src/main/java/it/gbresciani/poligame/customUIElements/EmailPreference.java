@@ -8,16 +8,21 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.EditText;
 
+import com.squareup.otto.Bus;
+
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.helper.Helper;
 
 public class EmailPreference extends EditTextPreference {
 
     private final Context mContext;
+    private Bus BUS;
 
     public EmailPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
+        BUS = BusProvider.getInstance();
     }
 
     @Override protected void onBindDialogView(View view) {
@@ -34,10 +39,14 @@ public class EmailPreference extends EditTextPreference {
         d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 String emailToValidate = editText.getText().toString();
-
-                if (!"".equals(emailToValidate) && !Helper.isValidEmail(emailToValidate)) {
+                boolean isEmpty= "".equals(emailToValidate);
+                if (!isEmpty && !Helper.isValidEmail(emailToValidate)) {
                     editText.setError(mContext.getResources().getString(R.string.mail_not_valid_message));
                 } else {
+                    if(isEmpty){
+                        // Disable data collect
+                        getSharedPreferences().edit().putBoolean(mContext.getResources().getString(R.string.setting_collect_key), false).commit();
+                    }
                     persistString(emailToValidate);
                     onDialogClosed(true);
                     d.dismiss();
