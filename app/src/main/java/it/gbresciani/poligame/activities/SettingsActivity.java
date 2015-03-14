@@ -1,16 +1,22 @@
 package it.gbresciani.poligame.activities;
 
-import android.app.Activity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
-import it.gbresciani.poligame.R;
-import it.gbresciani.poligame.fragments.SettingsFragment;
+import com.nispok.snackbar.Snackbar;
+import com.nispok.snackbar.enums.SnackbarType;
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
-public class SettingsActivity extends Activity {
+import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.events.NoEmailEvent;
+import it.gbresciani.poligame.fragments.SettingsFragment;
+import it.gbresciani.poligame.helper.BusProvider;
+
+public class SettingsActivity extends ActionBarActivity {
+
+    private Bus BUS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,38 +25,30 @@ public class SettingsActivity extends Activity {
         getFragmentManager().beginTransaction()
                 .add(R.id.settings_content, SettingsFragment.newInstance())
                 .commit();
+        BUS = BusProvider.getInstance();
     }
-
 
     @Override protected void onResume() {
         super.onResume();
+        BUS.register(this);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_settings, menu);
-        return true;
+    @Override protected void onPause() {
+        BUS.unregister(this);
+        super.onPause();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
     private void hideStatusBar() {
         View decorView = getWindow().getDecorView();
         // Hide the status bar.
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
+    }
+
+    @Subscribe public void noEmail(NoEmailEvent noEmailEvent){
+        Snackbar.with(this).
+                text(R.string.no_email_snackbar)
+                .type(SnackbarType.SINGLE_LINE)
+                .show(this);
     }
 }
