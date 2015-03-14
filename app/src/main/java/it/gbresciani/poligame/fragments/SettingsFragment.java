@@ -23,7 +23,7 @@ public class SettingsFragment extends PreferenceFragment {
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
-
+     *
      * @return A new instance of fragment SettingsFragment.
      */
     public static SettingsFragment newInstance() {
@@ -55,7 +55,7 @@ public class SettingsFragment extends PreferenceFragment {
         super.onPause();
     }
 
-    @Subscribe public void noEmail(NoEmailEvent noEmailEvent){
+    @Subscribe public void noEmail(NoEmailEvent noEmailEvent) {
         Snackbar.with(getActivity()).
                 text(R.string.no_email_snackbar)
                 .type(SnackbarType.SINGLE_LINE)
