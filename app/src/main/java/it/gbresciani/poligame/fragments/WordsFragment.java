@@ -4,8 +4,6 @@ package it.gbresciani.poligame.fragments;
 import android.app.Fragment;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +11,6 @@ import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
@@ -30,7 +27,6 @@ import it.gbresciani.poligame.activities.PlayActivity;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.helper.Helper;
-import it.gbresciani.poligame.model.Syllable;
 import it.gbresciani.poligame.model.Word;
 
 /**
