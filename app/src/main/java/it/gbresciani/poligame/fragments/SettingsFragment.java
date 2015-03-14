@@ -2,19 +2,23 @@ package it.gbresciani.poligame.fragments;
 
 
 import android.os.Bundle;
-import android.app.Fragment;
 import android.preference.PreferenceFragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+
+import com.nispok.snackbar.Snackbar;
+import com.nispok.snackbar.enums.SnackbarType;
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.events.NoEmailEvent;
+import it.gbresciani.poligame.helper.BusProvider;
 
 /**
  * The settings fragment
  */
 public class SettingsFragment extends PreferenceFragment {
 
+    private Bus BUS;
 
     /**
      * Use this factory method to create a new instance of
@@ -22,7 +26,6 @@ public class SettingsFragment extends PreferenceFragment {
 
      * @return A new instance of fragment SettingsFragment.
      */
-
     public static SettingsFragment newInstance() {
         SettingsFragment fragment = new SettingsFragment();
         return fragment;
@@ -35,6 +38,28 @@ public class SettingsFragment extends PreferenceFragment {
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setPreferenceScreen(null);
         addPreferencesFromResource(R.xml.preferences);
+
+        BUS = BusProvider.getInstance();
+    }
+
+
+    @Override public void onResume() {
+        super.onResume();
+        BUS.register(this);
+    }
+
+    @Override public void onPause() {
+        BUS.unregister(this);
+        super.onPause();
+    }
+
+    @Subscribe public void noEmail(NoEmailEvent noEmailEvent){
+        Snackbar.with(getActivity()).
+                text(R.string.no_email_snackbar)
+                .type(SnackbarType.SINGLE_LINE)
+                .duration(1000l)
+                .show(getActivity());
     }
 }
