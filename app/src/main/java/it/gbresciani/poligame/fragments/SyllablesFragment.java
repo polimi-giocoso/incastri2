@@ -283,6 +283,7 @@ public class SyllablesFragment extends Fragment {
 
         v.startAnimation(animSet);
         syllableViewSelection.set(cardIndex, selected);
+        v.setClickable(!selected);
     }
 
 
