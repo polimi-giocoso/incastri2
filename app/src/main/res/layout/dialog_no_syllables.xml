@@ -10,21 +10,22 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="@dimen/no_syllable_dialog_padding"
         android:id="@+id/syllables_radio_group">
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_two_syllables"
             android:id="@+id/two_syllables_radio_button"
-            android:layout_weight="1"/>
+            android:drawableLeft="@drawable/syllables_two"
+            android:layout_marginRight="@dimen/no_syllable_dialog_padding"/>
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_four_syllables"
+            android:drawableLeft="@drawable/syllables_four"
             android:id="@+id/four_syllables_radio_button"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"/>
+            android:layout_gravity="center_vertical"/>
     </RadioGroup>
 </LinearLayout>
