@@ -31,6 +31,7 @@
     <string name="setting_collect_summary_off">I dati non verranno raccolti</string>
     <string name="setting_collect_summary_on">I dati verrano raccolti e inviati alla mail indicata</string>
     <string name="no_email_snackbar">Prima impostare un\'email</string>
+    <string name="play_multi">Multiplayer</string>
 
 
 </resources>

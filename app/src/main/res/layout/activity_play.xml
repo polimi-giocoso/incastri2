@@ -1,14 +1,23 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
+              android:orientation="horizontal"
+              android:background="@drawable/play_bg"
               tools:context=".MainActivity">
+
+    <ImageView
+        android:layout_width="75dp"
+        android:layout_height="@dimen/play_logo_dimen"
+        android:id="@+id/imageView2"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/play_logo_margin"
+        android:src="@drawable/logo"/>
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/play_bg"
         android:orientation="horizontal">
 
         <FrameLayout
@@ -30,4 +39,4 @@
 
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>
