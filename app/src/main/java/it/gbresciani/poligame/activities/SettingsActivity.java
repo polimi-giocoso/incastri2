@@ -49,6 +49,7 @@ public class SettingsActivity extends ActionBarActivity {
         Snackbar.with(this).
                 text(R.string.no_email_snackbar)
                 .type(SnackbarType.SINGLE_LINE)
+                .duration(1000l)
                 .show(this);
     }
 }
