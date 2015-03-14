@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import it.gbresciani.poligame.model.Syllable;
 import it.gbresciani.poligame.model.Word;
@@ -174,5 +176,21 @@ public class Helper {
         }
 
         return inSampleSize;
+    }
+
+
+    /**
+     * Validate a string as an email
+     *
+     * @param email
+     * @return If is valid
+     */
+    public static boolean isValidEmail(String email){
+        String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+                + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+
+        Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
     }
 }
