@@ -24,7 +24,6 @@ public class SettingsActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
-        hideStatusBar();
     }
 
     @Override

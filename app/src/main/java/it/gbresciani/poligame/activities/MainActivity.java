@@ -41,7 +41,6 @@ public class MainActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         BUS.register(this);
-        hideStatusBar();
     }
 
     @Override
