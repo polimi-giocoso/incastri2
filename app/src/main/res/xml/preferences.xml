@@ -2,23 +2,46 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:custom="http://schemas.android.com/apk/res-auto">
 
-    <it.gbresciani.poligame.customUIElements.NOSyllablesPreference
-        android:defaultValue="4"
-        android:dialogTitle="@string/setting_no_syllables_title"
-        android:key="@string/setting_no_syllables_key"
-        android:summary="4"
-        android:title="@string/setting_no_syllables_title">
+    <PreferenceCategory
+        android:key="pref_game_settings"
+        android:title="@string/pref_title_game">
+        <it.gbresciani.poligame.customUIElements.SyllablesPreference
+            android:defaultValue="4"
+            android:dialogTitle="@string/setting_no_syllables_title"
+            android:key="@string/setting_no_syllables_key"
+            android:summary="4"
+            android:title="@string/setting_no_syllables_title">
 
-    </it.gbresciani.poligame.customUIElements.NOSyllablesPreference>
+        </it.gbresciani.poligame.customUIElements.SyllablesPreference>
 
-    <it.gbresciani.poligame.customUIElements.NumberPickerPreference
-        android:defaultValue="1"
-        android:dialogTitle="@string/setting_no_pages_title"
-        android:key="@string/setting_no_pages_key"
-        android:summary="@string/setting_no_pages_summary"
-        custom:min="1"
-        custom:max="10"
-        android:title="@string/setting_no_pages_title">
-    </it.gbresciani.poligame.customUIElements.NumberPickerPreference>
+        <it.gbresciani.poligame.customUIElements.NumberPickerPreference
+            android:defaultValue="1"
+            android:dialogTitle="@string/setting_no_pages_title"
+            android:key="@string/setting_no_pages_key"
+            android:summary="@string/setting_no_pages_summary"
+            android:title="@string/setting_no_pages_title"
+            custom:max="10"
+            custom:min="1">
+        </it.gbresciani.poligame.customUIElements.NumberPickerPreference>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="pref_others_settings"
+        android:title="@string/pref_title_data_collect">
+
+        <it.gbresciani.poligame.customUIElements.DataCollectPreference
+            android:key="@string/setting_collect_key"
+            android:defaultValue="false"
+            android:summaryOff="@string/setting_collect_summary_off"
+            android:summaryOn="@string/setting_collect_summary_on"
+            android:title="@string/setting_collect_title">
+        </it.gbresciani.poligame.customUIElements.DataCollectPreference>
+        <it.gbresciani.poligame.customUIElements.EmailPreference
+            android:defaultValue=""
+            android:key="@string/setting_email_key"
+            android:summary="@string/pref_title_game"
+            android:title="@string/setting_email_title">
+        </it.gbresciani.poligame.customUIElements.EmailPreference>
+    </PreferenceCategory>
 
 </PreferenceScreen>
