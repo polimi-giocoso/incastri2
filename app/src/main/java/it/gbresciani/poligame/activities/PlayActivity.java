@@ -179,6 +179,7 @@ public class PlayActivity extends FragmentActivity {
      * React to a wordConfirmed
      */
     @Subscribe public void wordConfirmed(WordConfirmedEvent wordConfirmedEvent) {
+        timeoutHandler.removeCallbacksAndMessages(null);
         String confirmedWordString = wordConfirmedEvent.getWordConfirmed();
         Word word = wordByLemma(confirmedWordString);
         // If exists and it's new
@@ -195,6 +196,7 @@ public class PlayActivity extends FragmentActivity {
      * React to a wordSelected
      */
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
+        timeoutHandler.removeCallbacksAndMessages(null);
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
             // Play correct sound
