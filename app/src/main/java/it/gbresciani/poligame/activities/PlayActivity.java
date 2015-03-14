@@ -27,11 +27,13 @@ import java.util.Locale;
 
 import butterknife.ButterKnife;
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.events.NextPageEvent;
 import it.gbresciani.poligame.events.PageCompletedEvent;
 import it.gbresciani.poligame.events.SyllableSelectedEvent;
 import it.gbresciani.poligame.events.WordConfirmedEvent;
 import it.gbresciani.poligame.events.WordDismissedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
+import it.gbresciani.poligame.fragments.PageCompletedFragment;
 import it.gbresciani.poligame.fragments.SyllablesFragment;
 import it.gbresciani.poligame.fragments.WordConfirmDialogFragment;
 import it.gbresciani.poligame.fragments.WordsFragment;
@@ -47,7 +49,7 @@ import it.gbresciani.poligame.model.Word;
 public class PlayActivity extends FragmentActivity {
 
     private int noPages;
-    private int currentPageNum;
+    private int currentPageNum = 0;
     private int noSyllables;
     private String syllableYetSelected = "";
     private int backPressedCount = 0;
@@ -109,14 +111,15 @@ public class PlayActivity extends FragmentActivity {
      * Start the game
      */
     private void startGame() {
-        currentPageNum = 1;
-        nextPage(currentPageNum);
+        nextPage();
     }
 
     /**
      * Initialize a page, adding the two fragments and passing them the calculated syllables and words
      */
-    private void nextPage(int pageNum) {
+    private void nextPage() {
+
+        currentPageNum++;
 
         // Determine words and syllables for the page
         ArrayList<Syllable> syllables = Helper.chooseSyllables(noSyllables);
@@ -136,18 +139,44 @@ public class PlayActivity extends FragmentActivity {
         ft.commit();
     }
 
+    private void showPageCompleted() {
+
+        Handler h = new Handler();
+
+        // Waiting for the owrd dialog to disappear
+        h.postDelayed(new Runnable() {
+            @Override public void run() {
+                FragmentManager fm = getFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+
+                PageCompletedFragment pageCompletedFragment = PageCompletedFragment.newInstance();
+
+                ft.setCustomAnimations(R.animator.test, R.animator.test);
+
+                ft.replace(R.id.syllables_frame_layout, pageCompletedFragment);
+
+                ft.commit();
+            }
+        }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT * 2);
+    }
+
+
     /**
-     * React to a PageCompletedEvent, opening a new one or ending the game
+     * React to a PageCompletedEvent, changing the layout
      */
     @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
-        Log.d("pageCompleted", String.valueOf(pageCompletedEvent.getPageNumber()) + "/" + String.valueOf(noPages));
+            showPageCompleted();
+    }
 
-        if (pageCompletedEvent.getPageNumber() == noPages) {
+    /**
+     * React to a NextPageEvent, opening a new one or ending the game
+     */
+    @Subscribe public void nextPage(NextPageEvent nextPageEvent) {
+
+        if (currentPageNum == noPages) {
             showEndDialog();
-            Log.d("pageCompleted", "PARTITA TERMINATA!");
         } else {
-            currentPageNum++;
-            nextPage(currentPageNum);
+            nextPage();
         }
     }
 

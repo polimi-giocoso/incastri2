@@ -6,20 +6,21 @@
               android:id="@+id/syllables_container"
               tools:context="it.gbresciani.poligame.fragments.SyllablesFragment">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/syllables_layout_1"
-        android:layout_weight="1">
-    </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/syllables_layout_2"
+            android:layout_weight="1">
+        </LinearLayout>
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/syllables_layout_2"
-        android:layout_weight="1">
-    </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/syllables_layout_1"
+            android:layout_weight="1">
+        </LinearLayout>
+
 </LinearLayout>
 

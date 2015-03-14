@@ -32,6 +32,7 @@ import it.gbresciani.poligame.helper.BusProvider;
 
 public class WordConfirmDialogFragment extends DialogFragment {
     private static final String ARG_PARAM1 = "word";
+    public static final int WORD_DIALOG_TIMEOUT = 500;
 
     private String word;
     @InjectView(R.id.word_textview) TextView wordTextView;
@@ -149,7 +150,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
                     @Override public void run() {
                         dismiss();
                     }
-                }, 500);
+                }, WORD_DIALOG_TIMEOUT);
             }
 
             @Override public void onAnimationCancel(Animator animation) {
