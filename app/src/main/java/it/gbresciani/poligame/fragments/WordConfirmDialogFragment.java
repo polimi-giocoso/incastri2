@@ -39,7 +39,6 @@ public class WordConfirmDialogFragment extends DialogFragment {
     @InjectView(R.id.no_button) ImageButton noButton;
 
     private Bus BUS;
-    private Dialog dialog;
 
     /**
      * Use this factory method to create a new instance of
@@ -85,14 +84,6 @@ public class WordConfirmDialogFragment extends DialogFragment {
         super.onPause();
     }
 
-    @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
-        dialog = super.onCreateDialog(savedInstanceState);
-
-        dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
-
-        return dialog;
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -115,7 +106,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
     @OnClick(R.id.no_button)
     public void no() {
         BUS.post(new WordDismissedEvent());
-        dialog.dismiss();
+        dismiss();
     }
 
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
@@ -138,7 +129,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
                 animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.holo_green_light));
             } else {
                 // Skip color animation
-                dialog.dismiss();
+                dismiss();
                 return;
             }
         } else {
@@ -156,7 +147,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
             @Override public void onAnimationEnd(Animator animation) {
                 (new Handler()).postDelayed(new Runnable() {
                     @Override public void run() {
-                        dialog.dismiss();
+                        dismiss();
                     }
                 }, 1000);
             }
@@ -172,10 +163,4 @@ public class WordConfirmDialogFragment extends DialogFragment {
 
         animator.start();
     }
-
-    private void speakWords(String speech) {
-        //implement TTS here
-    }
-
-
 }
