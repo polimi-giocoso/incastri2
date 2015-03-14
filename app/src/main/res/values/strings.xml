@@ -8,9 +8,10 @@
     <string name="title_activity_play">PlayActivity</string>
     <string name="play">Gioca!</string>
     <string name="title_activity_config">ConfigActivity</string>
-    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_settings">Impostazioni</string>
     <string name="setting_no_pages_title">Numero di schermate</string>
     <string name="setting_no_pages_key">setting_key_no_pages</string>
+    <string name="setting_email_key">setting_key_no_email</string>
     <string name="setting_no_pages_summary">Numero delle schermate che compongono una partita</string>
     <string name="setting_no_syllables_title">Numero di sillabe</string>
     <string name="setting_no_syllables_key">setting_no_syllables_key</string>
@@ -20,6 +21,16 @@
     <string name="message_end">Partita Terminata!</string>
     <string name="message_congratulations">Complimenti!</string>
     <string name="no_tts_message">No TTS support</string>
+    <string name="pref_title_game">Impostazioni di gioco</string>
+    <string name="pref_title_data_collect">Raccolta dati</string>
+    <string name="setting_email_title">Email</string>
+    <string name="mail_not_valid_message">email non valida!</string>
+    <string name="setting_collect_key">setting_collect_key</string>
+    <string name="setting_collect_title">Raccolta dati</string>
+    <string name="setting_collect_summary">Se selezionatao verranno inviate email contenenti i dati delle partite.</string>
+    <string name="setting_collect_summary_off">I dati non verranno raccolti</string>
+    <string name="setting_collect_summary_on">I dati verrano raccolti e inviati alla mail indicata</string>
+    <string name="no_email_snackbar">Prima impostare un\'email</string>
 
 
 </resources>
