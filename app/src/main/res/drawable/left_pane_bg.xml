@@ -1,13 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-<item>
-    <shape xmlns:android="http://schemas.android.com/apk/res/android"
-           android:shape="rectangle" >
-        <corners android:radius="10dp"/>
-        <stroke
-            android:width="5dp"
-            android:color="@color/orange"/>
-        <solid android:color="@android:color/white"/>
-    </shape>
-</item>
+    <item android:left="@dimen/shadow_offset" android:top="@dimen/shadow_offset">
+        <shape xmlns:android="http://schemas.android.com/apk/res/android"
+               android:shape="rectangle">
+
+            <corners android:radius="10dp"/>
+            <solid android:color="@color/shadow_color"/>
+        </shape>
+    </item>
+    <item android:bottom="@dimen/shadow_offset" android:right="@dimen/shadow_offset">
+        <shape xmlns:android="http://schemas.android.com/apk/res/android"
+               android:shape="rectangle">
+            <corners android:radius="10dp"/>
+            <stroke
+                android:width="5dp"
+                android:color="@color/orange"/>
+            <solid android:color="@android:color/white"/>
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <padding
+                android:bottom="@dimen/shadow_offset"
+                android:right="@dimen/shadow_offset"/>
+            <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
 </layer-list>
