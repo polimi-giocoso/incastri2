@@ -143,7 +143,7 @@ public class PlayActivity extends FragmentActivity {
 
         Handler h = new Handler();
 
-        // Waiting for the owrd dialog to disappear
+        // Waiting for the word dialog to disappear
         h.postDelayed(new Runnable() {
             @Override public void run() {
                 FragmentManager fm = getFragmentManager();
@@ -151,7 +151,7 @@ public class PlayActivity extends FragmentActivity {
 
                 PageCompletedFragment pageCompletedFragment = PageCompletedFragment.newInstance();
 
-                ft.setCustomAnimations(R.animator.test, R.animator.test);
+                ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
 
                 ft.replace(R.id.syllables_frame_layout, pageCompletedFragment);
 
