@@ -3,6 +3,7 @@ package it.gbresciani.poligame.helper;
 import android.graphics.BitmapFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -22,7 +23,7 @@ public class Helper {
      *
      * @param num the number of syllables to choose
      */
-    public static ArrayList<Syllable> chooseSyllables(int num){
+    public static ArrayList<Syllable> chooseSyllables(int num) {
         ArrayList<Syllable> syllables = new ArrayList<>();
         List<Word> availWords = Word.listAll(Word.class);
         List<Word> usedWords = new ArrayList<>();
@@ -38,41 +39,45 @@ public class Helper {
         syllables.add(Syllable.find(Syllable.class, "val = ?", firstRndWord.getSyllable2()).get(0));
         num -= 2;
 
-        if(num == 0){
+        if (num == 0) {
             return syllables;
         }
 
-        for(ListIterator<Syllable> its = syllables.listIterator(); its.hasNext(); ){
+        Collections.shuffle(syllables);
+
+        for (ListIterator<Syllable> its = syllables.listIterator(); its.hasNext(); ) {
             Syllable s = its.next();
             // Sillable trovate
-            if(num == 0){
+            if (num == 0) {
                 return syllables;
             }
-            String query =  "SELECT * FROM Word where(syllable1 = ? or syllable2 = ? )";
+            String query = "SELECT * FROM Word where(syllable1 = ? or syllable2 = ? )";
 
             // Find words with s syllable
             List<Word> sWords = Word.findWithQuery(Word.class, query, s.getVal(), s.getVal());
+
+            Collections.shuffle(sWords);
 
             for (int i = 0; i < sWords.size(); i++) {
 
                 Word newWord = sWords.get(i);
                 // If the word is new
-                if(!usedWords.contains(newWord)){
+                if (!usedWords.contains(newWord)) {
                     // Add the new syllables
                     usedWords.add(newWord);
                     Syllable syllable1 = Syllable.find(Syllable.class, "val = ?", newWord.getSyllable1()).get(0);
                     Syllable syllable2 = Syllable.find(Syllable.class, "val = ?", newWord.getSyllable2()).get(0);
-                    if(!syllables.contains(syllable1)){
+                    if (!syllables.contains(syllable1)) {
                         its.add(syllable1);
                         num--;
-                        if(num == 0){
+                        if (num == 0) {
                             return syllables;
                         }
                     }
-                    if(!syllables.contains(syllable2)){
+                    if (!syllables.contains(syllable2)) {
                         its.add(syllable2);
                         num--;
-                        if(num == 0){
+                        if (num == 0) {
                             return syllables;
                         }
                     }
@@ -87,8 +92,8 @@ public class Helper {
     /**
      * Calculate the possible Words coming from the permutation of length k of a given list of Syllables
      *
-     * @param syllables   The list of Syllables
-     * @param k The length of words (in syllables)
+     * @param syllables The list of Syllables
+     * @param k         The length of words (in syllables)
      */
     public static ArrayList<Word> permuteSyllablesInWords(List<Syllable> syllables, int k) {
         ArrayList<ArrayList<Syllable>> result = new ArrayList<>();
@@ -118,7 +123,7 @@ public class Helper {
         }
 
         // If k < n-1 remove n - k elements from each permutation to determine the ordered selection
-        if(k < syllables.size() - 1) {
+        if (k < syllables.size() - 1) {
             for (ArrayList<Syllable> r : result) {
                 r.subList(r.size() - k, r.size()).clear();
             }
@@ -132,20 +137,19 @@ public class Helper {
         ArrayList<Word> resultWords = new ArrayList<>();
 
         // Transform syllable couples in words
-        for (ArrayList<Syllable> r : result){
+        for (ArrayList<Syllable> r : result) {
             String possibleWord = "";
-            for (Syllable s : r){
+            for (Syllable s : r) {
                 possibleWord += s.getVal();
             }
             List<Word> words = Word.find(Word.class, "lemma = ?", possibleWord);
-            if(words.size() > 0){
+            if (words.size() > 0) {
                 resultWords.add(words.get(0));
             }
         }
 
         return resultWords;
     }
-
 
 
     /**
@@ -185,7 +189,7 @@ public class Helper {
      * @param email
      * @return If is valid
      */
-    public static boolean isValidEmail(String email){
+    public static boolean isValidEmail(String email) {
         String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
                 + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
