@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
-import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.squareup.otto.Bus;
@@ -25,7 +25,7 @@ public class MainActivity extends FragmentActivity {
 
     private Bus BUS;
 
-    @InjectView(R.id.play_button) Button playButton;
+    @InjectView(R.id.play_layout) LinearLayout playLayout;
     @InjectView(R.id.db_progress_bar) ProgressBar dbProgressBar;
 
     @Override
@@ -54,11 +54,11 @@ public class MainActivity extends FragmentActivity {
      */
     @Subscribe public void progressChange(ProgressChangeEvent progressChangeEvent) {
         if (progressChangeEvent.getProgress() == 0) {
-            playButton.setVisibility(View.INVISIBLE);
+            playLayout.setVisibility(View.INVISIBLE);
             dbProgressBar.setVisibility(View.VISIBLE);
         }
         if (progressChangeEvent.getProgress() == 100) {
-            playButton.setVisibility(View.VISIBLE);
+            playLayout.setVisibility(View.VISIBLE);
             dbProgressBar.setVisibility(View.INVISIBLE);
         }
     }
