@@ -164,12 +164,10 @@ public class WordsFragment extends Fragment {
 
             // Add action
             slot.setOnClickListener(new View.OnClickListener() {
-                @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2) @Override public void onClick(View v) {
+                @Override public void onClick(View v) {
                     int index = usedSlots.indexOf(v);
                     Word clickWord = foundWords.get(index);
                     BUS.post(new WordClickedEvent(clickWord));
-
-                    v.getOverlay().add(getResources().getDrawable(R.drawable.logo));
                 }
             });
 
