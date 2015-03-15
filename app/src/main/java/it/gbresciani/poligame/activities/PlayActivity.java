@@ -30,6 +30,7 @@ import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.events.NextPageEvent;
 import it.gbresciani.poligame.events.PageCompletedEvent;
 import it.gbresciani.poligame.events.SyllableSelectedEvent;
+import it.gbresciani.poligame.events.WordClickedEvent;
 import it.gbresciani.poligame.events.WordConfirmedEvent;
 import it.gbresciani.poligame.events.WordDismissedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
@@ -205,7 +206,7 @@ public class PlayActivity extends FragmentActivity {
 
 
     /**
-     * React to a wordConfirmed
+     * React to a WordConfirmedEvent
      */
     @Subscribe public void wordConfirmed(WordConfirmedEvent wordConfirmedEvent) {
         timeoutHandler.removeCallbacksAndMessages(null);
@@ -222,7 +223,7 @@ public class PlayActivity extends FragmentActivity {
     }
 
     /**
-     * React to a wordSelected
+     * React to a WordSelectedEvent
      */
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         timeoutHandler.removeCallbacksAndMessages(null);
@@ -243,6 +244,13 @@ public class PlayActivity extends FragmentActivity {
         } else {
             soundPool.play(wrongSound, 1f, 1f, 0, 0, 1f);
         }
+    }
+
+    /**
+     * React to a WordClickedEvent
+     */
+    @Subscribe public void wordClicked(WordClickedEvent wordClickedEvent) {
+        say(wordClickedEvent.getWord().getLemma());
     }
 
     /*  Helper Methods  */

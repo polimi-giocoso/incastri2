@@ -1,8 +1,10 @@
 package it.gbresciani.poligame.fragments;
 
 
+import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +26,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
+import it.gbresciani.poligame.events.WordClickedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.helper.Helper;
@@ -33,12 +36,15 @@ import it.gbresciani.poligame.model.Word;
  * The fragment that shows the list of words
  */
 public class WordsFragment extends Fragment {
-    private static final String NO_SYLLABLES = "no_syllables";
+    private static final String WORDS = "words";
 
-    private List<Word> words;
     private PlayActivity mActivity;
     private Bus BUS;
     private ArrayList<ImageView> availableSlots = new ArrayList<>();
+    private List<Word> availableWords;
+    private ArrayList<ImageView> usedSlots = new ArrayList<>();
+    private List<Word> foundWords = new ArrayList<>();
+
 
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
@@ -53,8 +59,7 @@ public class WordsFragment extends Fragment {
     public static WordsFragment newInstance(ArrayList<Word> words) {
         WordsFragment fragment = new WordsFragment();
         Bundle args = new Bundle();
-        args.putParcelableArrayList(NO_SYLLABLES, words);
-        args.putSerializable(NO_SYLLABLES, words);
+        args.putParcelableArrayList(WORDS, words);
         fragment.setArguments(args);
         return fragment;
     }
@@ -67,7 +72,7 @@ public class WordsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            words = getArguments().getParcelableArrayList(NO_SYLLABLES);
+            availableWords = getArguments().getParcelableArrayList(WORDS);
         }
         mActivity = (PlayActivity) getActivity();
         BUS = BusProvider.getInstance();
@@ -99,7 +104,7 @@ public class WordsFragment extends Fragment {
 
     private void initUI() {
 
-        final int wordsToFind = words.size() <= 4 ? words.size() : 4;
+        final int wordsToFind = availableWords.size() <= 4 ? availableWords.size() : 4;
 
         // Waiting for the layout to be drawn in order to get the correct height and width and draw the word slots
         ViewTreeObserver vto = wordsContainerLinearLayout.getViewTreeObserver();
@@ -115,6 +120,9 @@ public class WordsFragment extends Fragment {
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
                 int slotDimen = Math.min(width, (height / wordsToFind));
+
+                int containerPadding = (int) (getResources().getDimension(R.dimen.left_pane_border_width) * 2);
+                wordsContainerLinearLayout.setPadding(containerPadding, containerPadding, containerPadding, containerPadding);
 
                 // Draw as much slots as needed
                 for (int i = 0; i < wordsToFind; i++) {
@@ -144,10 +152,30 @@ public class WordsFragment extends Fragment {
 
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+            // Move slot to the used ones
+            ImageView slot = availableSlots.get(0);
+            usedSlots.add(slot);
             availableSlots.remove(0);
+
+            // Move word to the found ones
+            Word word = wordSelectedEvent.getWord();
+            foundWords.add(word);
+            availableWords.remove(word);
+
+            // Add action
+            slot.setOnClickListener(new View.OnClickListener() {
+                @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2) @Override public void onClick(View v) {
+                    int index = usedSlots.indexOf(v);
+                    Word clickWord = foundWords.get(index);
+                    BUS.post(new WordClickedEvent(clickWord));
+
+                    v.getOverlay().add(getResources().getDrawable(R.drawable.logo));
+                }
+            });
+
+
         }
     }
-
 
 
     /**
