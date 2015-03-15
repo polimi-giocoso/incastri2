@@ -13,7 +13,7 @@
                android:shape="rectangle">
             <corners android:radius="10dp"/>
             <stroke
-                android:width="5dp"
+                android:width="@dimen/left_pane_border_width"
                 android:color="@color/orange"/>
             <solid android:color="@android:color/white"/>
         </shape>
