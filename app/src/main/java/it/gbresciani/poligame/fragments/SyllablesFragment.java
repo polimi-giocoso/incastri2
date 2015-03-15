@@ -176,7 +176,7 @@ public class SyllablesFragment extends Fragment {
                 int height = syllablesContainerLinearLayout.getMeasuredHeight();
 
                 // To maintain proportions calculates the margin according to the number of slot to be displayed
-                int slotMargin = (int) ((getResources().getDimension(R.dimen.slot_margin)) * 1.5);
+                int slotMargin = (height) / 10;
 
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
