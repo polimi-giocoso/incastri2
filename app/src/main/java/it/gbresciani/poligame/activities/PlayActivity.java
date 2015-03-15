@@ -22,6 +22,7 @@ import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,8 +41,11 @@ import it.gbresciani.poligame.fragments.WordConfirmDialogFragment;
 import it.gbresciani.poligame.fragments.WordsFragment;
 import it.gbresciani.poligame.helper.BusProvider;
 import it.gbresciani.poligame.helper.Helper;
+import it.gbresciani.poligame.model.GameStat;
 import it.gbresciani.poligame.model.Syllable;
 import it.gbresciani.poligame.model.Word;
+import it.gbresciani.poligame.model.WordStat;
+import it.gbresciani.poligame.services.GenericIntentService;
 
 
 /**
@@ -74,6 +78,9 @@ public class PlayActivity extends FragmentActivity {
     private WordsFragment currentWordsFragment;
     private SyllablesFragment currentSyllablesFragment;
 
+    private GameStat gameStat;
+    private ArrayList<WordStat> wordStats = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +108,14 @@ public class PlayActivity extends FragmentActivity {
         super.onPause();
     }
 
+    @Override protected void onDestroy() {
+        if(mTTS != null) {
+            mTTS.stop();
+            mTTS.shutdown();
+        }
+        super.onDestroy();
+    }
+
     @Override public void onBackPressed() {
         if (backPressedCount == 5) {
             super.onBackPressed();
@@ -112,6 +127,8 @@ public class PlayActivity extends FragmentActivity {
      * Start the game
      */
     private void startGame() {
+        gameStat = new GameStat();
+        gameStat.setStartDate(new Date());
         nextPage();
     }
 
@@ -161,11 +178,15 @@ public class PlayActivity extends FragmentActivity {
         }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT * 2);
     }
 
-
     /**
      * React to a PageCompletedEvent, changing the layout
      */
     @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
+        // If last page store stats
+        if (currentPageNum == noPages) {
+            gameStat.setEndDate(new Date());
+            storeSendStats();
+        }
         showPageCompleted();
     }
 
@@ -173,7 +194,6 @@ public class PlayActivity extends FragmentActivity {
      * React to a NextPageEvent, opening a new one or ending the game
      */
     @Subscribe public void nextPage(NextPageEvent nextPageEvent) {
-
         if (currentPageNum == noPages) {
             showEndDialog();
         } else {
@@ -229,6 +249,9 @@ public class PlayActivity extends FragmentActivity {
         timeoutHandler.removeCallbacksAndMessages(null);
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+            // Save Stats
+            WordStat wordStat = new WordStat(new Date(), selectedWord.getLemma(), currentPageNum, null);
+            wordStats.add(wordStat);
             // Play correct sound
             soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
             // Update number of words to found
@@ -284,6 +307,18 @@ public class PlayActivity extends FragmentActivity {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         noPages = sp.getInt(getString(R.string.setting_no_pages_key), 1);
         noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
+    }
+
+    private void storeSendStats() {
+        gameStat.save();
+        for (WordStat ws : wordStats) {
+            ws.setGameStat(gameStat);
+            ws.save();
+        }
+        boolean send = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.setting_collect_key), false);
+        if (send) {
+            GenericIntentService.sendOneGameStat(this, gameStat.getId());
+        }
     }
 
     /**
