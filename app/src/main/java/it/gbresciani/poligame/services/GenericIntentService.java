@@ -82,7 +82,7 @@ public class GenericIntentService extends IntentService {
         for(WordStat ws : wordStats){
             long wordTime = ws.getFoundDate().getTime() - gameStat.getStartDate().getTime();
             long wordSeconds = TimeUnit.MILLISECONDS.toSeconds(wordTime);
-            long wordMinutes = TimeUnit.MILLISECONDS.toMinutes(wordSeconds);
+            long wordMinutes = TimeUnit.MILLISECONDS.toMinutes(wordTime);
             long wordRelativeSeconds = wordSeconds % 60;
             body += String.valueOf(ws.getPageNumber()) + " - " + ws.getWord() + ": " + String.format("%02d", wordMinutes) + ":" + String.format("%02d", wordRelativeSeconds) + "\n";
         }
