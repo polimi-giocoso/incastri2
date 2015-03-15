@@ -128,6 +128,35 @@ public class SyllablesFragment extends Fragment {
         }
     }
 
+    @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
+        for (View view : syllableViews) {
+
+            int degree = syllableViewRotationDegree.get(syllableViews.indexOf(view));
+
+            // Create leaving animations
+            AnimationSet animSet = new AnimationSet(true);
+            animSet.setInterpolator(new DecelerateInterpolator());
+            animSet.setFillAfter(true);
+
+            ScaleAnimation scaleAnimation = new ScaleAnimation(1f, 0f, 1f, 0f,
+                    ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                    ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+            scaleAnimation.setStartOffset(500);
+            scaleAnimation.setDuration(750);
+
+            RotateAnimation rotateAnimation = new RotateAnimation(degree, 0,
+                    RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                    RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+            rotateAnimation.setStartOffset(500);
+            rotateAnimation.setDuration(750);
+
+            animSet.addAnimation(scaleAnimation);
+            animSet.addAnimation(rotateAnimation);
+
+            view.startAnimation(animSet);
+        }
+    }
+
 
     /*  UI Methods  */
 
