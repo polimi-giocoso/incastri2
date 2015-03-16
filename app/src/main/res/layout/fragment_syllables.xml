@@ -1,10 +1,14 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="horizontal"
-              android:id="@+id/syllables_container"
               tools:context="it.gbresciani.poligame.fragments.SyllablesFragment">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/syllables_container">
 
         <LinearLayout
             android:orientation="vertical"
@@ -15,12 +19,22 @@
         </LinearLayout>
 
         <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:id="@+id/syllables_layout_1"
-            android:layout_weight="1">
-        </LinearLayout>
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/syllables_layout_1"
+                android:layout_weight="1">
+            </LinearLayout>
+    </LinearLayout>
 
-</LinearLayout>
+    <ImageView
+        android:layout_width="@dimen/exit_button_dimen"
+        android:layout_height="@dimen/exit_button_dimen"
+        android:layout_margin="@dimen/play_logo_margin"
+        android:id="@+id/exit_button"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/exit_selector"/>
+
+</RelativeLayout>
 
