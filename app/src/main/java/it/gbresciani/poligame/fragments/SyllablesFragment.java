@@ -1,7 +1,9 @@
 package it.gbresciani.poligame.fragments;
 
 
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,6 +31,7 @@ import java.util.Random;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import butterknife.OnClick;
 import it.gbresciani.poligame.R;
 import it.gbresciani.poligame.activities.PlayActivity;
 import it.gbresciani.poligame.events.PageCompletedEvent;
@@ -110,6 +113,21 @@ public class SyllablesFragment extends Fragment {
     public void onPause() {
         BUS.unregister(this);
         super.onPause();
+    }
+
+    @OnClick(R.id.exit_button) public void showExitDialog(){
+        AlertDialog.Builder adb = new AlertDialog.Builder(mActivity);
+        adb.setTitle(mActivity.getString(R.string.exit_dialog_title))
+                .setMessage(mActivity.getString(R.string.exit_dialog_message))
+                .setPositiveButton(getString(android.R.string.yes), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        mActivity.finish();
+                    }
+                })
+                .setNegativeButton(getString(android.R.string.no), null)
+                .create()
+                .show();
+
     }
 
     /*  Events  */
