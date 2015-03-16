@@ -7,13 +7,22 @@ import it.gbresciani.poligame.model.Word;
  */
 public class WordClickedEvent {
 
-    private Word word;
+    public static final String ENGLISH= "english";
+    public static final String ITALIAN = "italian";
 
-    public WordClickedEvent(Word word) {
+    private Word word;
+    private String LANG;
+
+    public WordClickedEvent(Word word, String LANG) {
         this.word = word;
+        this.LANG = LANG;
     }
 
     public Word getWord() {
         return word;
+    }
+
+    public String getLANG() {
+        return LANG;
     }
 }
