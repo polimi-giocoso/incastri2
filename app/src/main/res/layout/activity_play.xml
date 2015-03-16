@@ -7,7 +7,7 @@
               tools:context=".MainActivity">
 
     <ImageView
-        android:layout_width="75dp"
+        android:layout_width="@dimen/play_logo_dimen"
         android:layout_height="@dimen/play_logo_dimen"
         android:id="@+id/imageView2"
         android:layout_alignParentRight="true"
