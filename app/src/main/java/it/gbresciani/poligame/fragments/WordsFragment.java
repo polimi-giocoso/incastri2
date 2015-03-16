@@ -43,6 +43,8 @@ public class WordsFragment extends Fragment {
     private ArrayList<ImageView> availableSlots = new ArrayList<>();
     private List<Word> availableWords;
     private ArrayList<ImageView> usedSlots = new ArrayList<>();
+    private ArrayList<ImageView> wordFlags = new ArrayList<>();
+    private ArrayList<ImageView> usedFlags = new ArrayList<>();
     private List<Word> foundWords = new ArrayList<>();
 
 
@@ -138,9 +140,21 @@ public class WordsFragment extends Fragment {
                     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(slotDimen, slotDimen);
                     params.addRule(RelativeLayout.CENTER_IN_PARENT);
                     imageView.setLayoutParams(params);
-                    imageView.setBackgroundResource(R.drawable.word_slot);
+                    imageView.setImageResource(R.drawable.word_slot);
+
+                    // Create the flag View and add it to the RelativeLayout container
+                    int flagDimen = width / 6;
+                    ImageView flagImageView = new ImageView(mActivity);
+                    RelativeLayout.LayoutParams flagParams = new RelativeLayout.LayoutParams(flagDimen, flagDimen);
+                    flagParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                    flagParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                    flagImageView.setLayoutParams(flagParams);
+                    flagImageView.setImageResource(R.drawable.flag_en_selector);
+                    flagImageView.setVisibility(View.INVISIBLE);
 
                     rl.addView(imageView);
+                    rl.addView(flagImageView);
+                    wordFlags.add(flagImageView);
                     availableSlots.add(imageView);
 
                     // Add the RelativeLayout container to the main layout
@@ -154,8 +168,11 @@ public class WordsFragment extends Fragment {
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
             // Move slot to the used ones
             ImageView slot = availableSlots.get(0);
+            ImageView flag = wordFlags.get(0);
+            usedFlags.add(flag);
             usedSlots.add(slot);
             availableSlots.remove(0);
+            wordFlags.remove(0);
 
             // Move word to the found ones
             Word word = wordSelectedEvent.getWord();
@@ -167,11 +184,20 @@ public class WordsFragment extends Fragment {
                 @Override public void onClick(View v) {
                     int index = usedSlots.indexOf(v);
                     Word clickWord = foundWords.get(index);
-                    BUS.post(new WordClickedEvent(clickWord));
+                    BUS.post(new WordClickedEvent(clickWord, WordClickedEvent.ITALIAN));
                 }
             });
 
+            flag.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) {
+                    int index = usedFlags.indexOf(v);
+                    Word clickWord = foundWords.get(index);
+                    BUS.post(new WordClickedEvent(clickWord, WordClickedEvent.ENGLISH));
+                }
+            });
 
+            flag.setVisibility(View.VISIBLE);
+            slot.setImageBitmap(loadWordBitmap(slot.getWidth(),slot.getHeight()));
         }
     }
 
@@ -185,7 +211,7 @@ public class WordsFragment extends Fragment {
 
         InputStream ims = null;
         try {
-            ims = mActivity.getAssets().open("syllable_images/.png");
+            ims = mActivity.getAssets().open("words_images/puzzle_pieno.png");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -197,6 +223,12 @@ public class WordsFragment extends Fragment {
 
         // Calculate inSampleSize
         options.inSampleSize = Helper.calculateBitmapSize(options, reqWidth, reqHeight);
+
+        try {
+            ims.reset();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeStream(ims, null, options);
