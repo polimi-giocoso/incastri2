@@ -33,6 +33,9 @@
     <string name="no_email_snackbar">Prima impostare un\'email</string>
     <string name="play_multi">Multiplayer</string>
     <string name="page_completed_message">Complimenti, hai trovato tutte le parole!</string>
+    <string name="exit_dialog_message">Se esci tutti i progressi andranno persi!</string>
+    <string name="exit_dialog_title">Termina partita</string>
+    <string name="settings_text">Settings</string>
 
 
 </resources>
