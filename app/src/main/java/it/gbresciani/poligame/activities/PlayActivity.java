@@ -1,9 +1,7 @@
 package it.gbresciani.poligame.activities;
 
-import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -28,13 +26,16 @@ import java.util.Locale;
 
 import butterknife.ButterKnife;
 import it.gbresciani.poligame.R;
+import it.gbresciani.poligame.events.ExitEvent;
 import it.gbresciani.poligame.events.NextPageEvent;
 import it.gbresciani.poligame.events.PageCompletedEvent;
+import it.gbresciani.poligame.events.RepeatEvent;
 import it.gbresciani.poligame.events.SyllableSelectedEvent;
 import it.gbresciani.poligame.events.WordClickedEvent;
 import it.gbresciani.poligame.events.WordConfirmedEvent;
 import it.gbresciani.poligame.events.WordDismissedEvent;
 import it.gbresciani.poligame.events.WordSelectedEvent;
+import it.gbresciani.poligame.fragments.EndGameDialogFragment;
 import it.gbresciani.poligame.fragments.PageCompletedFragment;
 import it.gbresciani.poligame.fragments.SyllablesFragment;
 import it.gbresciani.poligame.fragments.WordConfirmDialogFragment;
@@ -73,7 +74,7 @@ public class PlayActivity extends FragmentActivity {
 
     private TextToSpeech mTTS;
     private boolean ttsConfigured = false;
-    private int TTS_CHECK = 0;
+    private int TTS_CHECK_ITA = 0;
 
     private WordsFragment currentWordsFragment;
     private SyllablesFragment currentSyllablesFragment;
@@ -109,7 +110,7 @@ public class PlayActivity extends FragmentActivity {
     }
 
     @Override protected void onDestroy() {
-        if(mTTS != null) {
+        if (mTTS != null) {
             mTTS.stop();
             mTTS.shutdown();
         }
@@ -131,6 +132,19 @@ public class PlayActivity extends FragmentActivity {
         gameStat.setStartDate(new Date());
         nextPage();
     }
+
+    /**
+     * Restart the game
+     */
+    private void restartGame() {
+        gameStat = new GameStat();
+        gameStat.setStartDate(new Date());
+        currentPageNum = 0;
+        syllableYetSelected = "";
+        backPressedCount = 0;
+        nextPage();
+    }
+
 
     /**
      * Initialize a page, adding the two fragments and passing them the calculated syllables and words
@@ -205,12 +219,12 @@ public class PlayActivity extends FragmentActivity {
      * React to a SyllableSelectedEvent
      */
     @Subscribe public void syllableSelected(SyllableSelectedEvent syllableSelectedEvent) {
-        say(syllableSelectedEvent.getSyllable().getVal());
+        saySyllable(syllableSelectedEvent.getSyllable());
         if ("".equals(syllableYetSelected)) {
             syllableYetSelected = syllableSelectedEvent.getSyllable().getVal();
             timeoutHandler.postDelayed(new Runnable() {
                 @Override public void run() {
-                    //If no other syllable has been selected dissmiss
+                    //If no other syllable has been selected dismiss
                     if (!"".equals(syllableYetSelected)) {
                         BUS.post(new WordDismissedEvent());
                         syllableYetSelected = "";
@@ -269,22 +283,60 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
+
+    /**
+     * React to a ExitEvent
+     */
+    @Subscribe public void Exit(ExitEvent exitEvent) {
+        finish();
+    }
+
+    /**
+     * React to a RepeatEvent
+     */
+    @Subscribe public void Repeat(RepeatEvent repeatEvent) {
+        restartGame();
+    }
+
     /**
      * React to a WordClickedEvent
      */
     @Subscribe public void wordClicked(WordClickedEvent wordClickedEvent) {
-        say(wordClickedEvent.getWord().getLemma());
+        sayWord(wordClickedEvent.getWord(), wordClickedEvent.getLANG());
     }
 
     /*  Helper Methods  */
 
 
-    private void say(String string) {
+    private void sayWord(Word word, String lang) {
         if (ttsConfigured) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mTTS.speak(string, TextToSpeech.QUEUE_ADD, null, string);
+                if (WordClickedEvent.ENGLISH.equals(lang)) {
+                    mTTS.setLanguage(Locale.ENGLISH);
+                    mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
+                } else {
+                    mTTS.setLanguage(Locale.ITALIAN);
+                    mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
+                }
             } else {
-                mTTS.speak(string, TextToSpeech.QUEUE_ADD, null);
+                if (WordClickedEvent.ENGLISH.equals(lang)) {
+                    mTTS.setLanguage(Locale.ENGLISH);
+                    mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null);
+                } else {
+                    mTTS.setLanguage(Locale.ITALIAN);
+                    mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null);
+                }
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saySyllable(Syllable syllable) {
+        if (ttsConfigured) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mTTS.setLanguage(Locale.ITALIAN);
+                mTTS.speak(syllable.getVal(), TextToSpeech.QUEUE_ADD, null, syllable.getVal());
             }
         } else {
             Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
@@ -349,21 +401,13 @@ public class PlayActivity extends FragmentActivity {
     }
 
     private void showEndDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // 2. Chain together various setter methods to set the dialog characteristics
-        builder.setMessage(R.string.message_congratulations)
-                .setTitle(R.string.message_end);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
 
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override public void onClick(DialogInterface dialog, int which) {
-                finish();
-            }
-        });
+        // Create and show the dialog.
+        EndGameDialogFragment ed = EndGameDialogFragment.newInstance();
 
-        // 3. Get the AlertDialog from create()
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        ed.show(ft, "endDialog");
     }
 
     private void hideStatusBar() {
@@ -377,19 +421,19 @@ public class PlayActivity extends FragmentActivity {
     private void checkTTS() {
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-        startActivityForResult(checkTTSIntent, TTS_CHECK);
+        startActivityForResult(checkTTSIntent, TTS_CHECK_ITA);
     }
 
     /**
      * Called on TTS check
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == TTS_CHECK) {
+        if (requestCode == TTS_CHECK_ITA) {
             if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
                 mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
                     @Override public void onInit(int status) {
                         ttsConfigured = true;
-                        setTTSLang(Locale.ITALIAN);
+                        mTTS.setLanguage(Locale.ITALIAN);
                     }
                 });
             } else {
@@ -399,13 +443,4 @@ public class PlayActivity extends FragmentActivity {
             }
         }
     }
-
-    private void setTTSLang(Locale locale) {
-        if (ttsConfigured) {
-            mTTS.setLanguage(locale);
-        } else {
-            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
-        }
-    }
-
 }
