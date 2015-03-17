@@ -1,476 +1,571 @@
 [
   {
     "lemma":"arco",
+    "eng":"arc",
     "syllable1":"ar",
     "syllable2":"co"
   },
   {
     "lemma":"arma",
+    "eng":"weapon",
     "syllable1":"ar",
     "syllable2":"ma"
   },
   {
     "lemma":"bere",
+    "eng":"drink",
     "syllable1":"be",
     "syllable2":"re"
   },
   {
     "lemma":"biro",
+    "eng":"pen",
     "syllable1":"bi",
     "syllable2":"ro"
   },
   {
     "lemma":"buco",
+    "eng":"hole",
     "syllable1":"bu",
     "syllable2":"co"
   },
   {
     "lemma":"cane",
+    "eng":"dog",
     "syllable1":"ca",
     "syllable2":"ne"
   },
   {
     "lemma":"casa",
+    "eng":"home",
     "syllable1":"ca",
     "syllable2":"sa"
   },
   {
     "lemma":"cena",
+    "eng":"dinner",
     "syllable1":"ce",
     "syllable2":"na"
   },
   {
     "lemma":"ceno",
+    "eng":"I have dinner",
     "syllable1":"ce",
     "syllable2":"no"
   },
   {
     "lemma":"coda",
+    "eng":"tail",
     "syllable1":"co",
     "syllable2":"da"
   },
   {
     "lemma":"cono",
+    "eng":"cone",
     "syllable1":"co",
     "syllable2":"no"
   },
   {
     "lemma":"coro",
+    "eng":"choir",
     "syllable1":"co",
     "syllable2":"ro"
   },
   {
     "lemma":"cubo",
+    "eng":"cube",
     "syllable1":"cu",
     "syllable2":"bo"
   },
   {
     "lemma":"dado",
+    "eng":"dice",
     "syllable1":"da",
     "syllable2":"do"
   },
   {
     "lemma":"dito",
+    "eng":"finger",
     "syllable1":"di",
     "syllable2":"to"
   },
   {
     "lemma":"doni",
+    "eng":"gifts",
     "syllable1":"do",
     "syllable2":"ni"
   },
   {
     "lemma":"dono",
+    "eng":"gift",
     "syllable1":"do",
     "syllable2":"no"
   },
   {
     "lemma":"duca",
+    "eng":"duke",
     "syllable1":"du",
     "syllable2":"ca"
   },
   {
     "lemma":"faro",
+    "eng":"lighthouse",
     "syllable1":"fa",
     "syllable2":"ro"
   },
   {
     "lemma":"fata",
+    "eng":"fairy",
     "syllable1":"fa",
     "syllable2":"ta"
   },
   {
     "lemma":"fava",
+    "eng":"bean",
     "syllable1":"fa",
     "syllable2":"va"
   },
   {
     "lemma":"fico",
+    "eng":"fig",
     "syllable1":"fi",
     "syllable2":"co"
   },
   {
     "lemma":"filo",
+    "eng":"wire",
     "syllable1":"fi",
     "syllable2":"lo"
   },
   {
     "lemma":"foca",
+    "eng":"seal",
     "syllable1":"fo",
     "syllable2":"ca"
   },
   {
     "lemma":"foto",
+    "eng":"photo",
     "syllable1":"fo",
     "syllable2":"to"
   },
   {
     "lemma":"fumo",
+    "eng":"smoke",
     "syllable1":"fu",
     "syllable2":"mo"
   },
   {
     "lemma":"giro",
+    "eng":"ride",
     "syllable1":"gi",
     "syllable2":"ro"
   },
   {
     "lemma":"gola",
+    "eng":"throat",
     "syllable1":"go",
     "syllable2":"la"
   },
   {
     "lemma":"gufo",
+    "eng":"owl",
     "syllable1":"gu",
     "syllable2":"fo"
   },
   {
     "lemma":"lago",
+    "eng":"lake",
     "syllable1":"la",
     "syllable2":"go"
   },
   {
     "lemma":"lame",
+    "eng":"blades",
     "syllable1":"la",
     "syllable2":"me"
   },
   {
     "lemma":"lana",
+    "eng":"wool",
     "syllable1":"la",
     "syllable2":"ma"
   },
   {
     "lemma":"luce",
+    "eng":"light",
     "syllable1":"lu",
     "syllable2":"ce"
   },
   {
     "lemma":"luna",
+    "eng":"moon",
     "syllable1":"lu",
     "syllable2":"na"
   },
   {
     "lemma":"lupo",
+    "eng":"wolf",
     "syllable1":"lu",
     "syllable2":"po"
   },
   {
     "lemma":"mago",
+    "eng":"wizard",
     "syllable1":"ma",
     "syllable2":"go"
   },
   {
     "lemma":"mano",
+    "eng":"hand",
     "syllable1":"ma",
     "syllable2":"no"
   },
   {
     "lemma":"mare",
+    "eng":"sea",
     "syllable1":"ma",
     "syllable2":"re"
   },
   {
     "lemma":"mela",
+    "eng":"apple",
     "syllable1":"me",
     "syllable2":"la"
   },
   {
     "lemma":"mese",
+    "eng":"month",
     "syllable1":"me",
     "syllable2":"se"
   },
   {
     "lemma":"mora",
+    "eng":"blackberry",
     "syllable1":"mo",
     "syllable2":"ra"
   },
   {
     "lemma":"more",
+    "eng":"blackberries",
     "syllable1":"mo",
     "syllable2":"re"
   },
   {
     "lemma":"moto",
+    "eng":"motorbike",
     "syllable1":"mo",
     "syllable2":"to"
   },
   {
     "lemma":"mulo",
+    "eng":"mule",
     "syllable1":"mu",
     "syllable2":"lo"
   },
   {
     "lemma":"muro",
+    "eng":"wall",
     "syllable1":"mu",
     "syllable2":"ro"
   },
   {
     "lemma":"nano",
+    "eng":"dwarf",
     "syllable1":"na",
     "syllable2":"no"
   },
   {
     "lemma":"naso",
+    "eng":"nose",
     "syllable1":"na",
     "syllable2":"so"
   },
   {
     "lemma":"nave",
+    "eng":"ship",
     "syllable1":"na",
     "syllable2":"ve"
   },
   {
     "lemma":"nero",
+    "eng":"black",
     "syllable1":"ne",
     "syllable2":"ro"
   },
   {
     "lemma":"neve",
+    "eng":"snow",
     "syllable1":"ne",
     "syllable2":"ve"
   },
   {
     "lemma":"nido",
+    "eng":"nest",
     "syllable1":"ni",
     "syllable2":"do"
   },
   {
     "lemma":"noce",
+    "eng":"walnut",
     "syllable1":"no",
     "syllable2":"ce"
   },
   {
     "lemma":"nodo",
+    "eng":"node",
     "syllable1":"no",
     "syllable2":"do"
   },
   {
     "lemma":"nota",
+    "eng":"note",
     "syllable1":"no",
     "syllable2":"ta"
   },
   {
     "lemma":"nove",
+    "eng":"nine",
     "syllable1":"no",
     "syllable2":"ve"
   },
   {
     "lemma":"nube",
+    "eng":"cloud",
     "syllable1":"nu",
     "syllable2":"be"
   },
   {
     "lemma":"onda",
+    "eng":"wave",
     "syllable1":"on",
     "syllable2":"da"
   },
   {
     "lemma":"orco",
+    "eng":"ogre",
     "syllable1":"or",
     "syllable2":"co"
   },
   {
     "lemma":"orma",
+    "eng":"footprint",
     "syllable1":"or",
     "syllable2":"ma"
   },
   {
     "lemma":"orso",
+    "eng":"bear",
     "syllable1":"or",
     "syllable2":"so"
   },
   {
     "lemma":"orto",
+    "eng":"vegetable garden",
     "syllable1":"or",
     "syllable2":"to"
   },
   {
     "lemma":"pala",
+    "eng":"shovel",
     "syllable1":"pa",
     "syllable2":"la"
   },
   {
     "lemma":"palo",
+    "eng":"pole",
     "syllable1":"pa",
     "syllable2":"lo"
   },
   {
     "lemma":"pane",
+    "eng":"bread",
     "syllable1":"pa",
     "syllable2":"ne"
   },
   {
     "lemma":"pelo",
+    "eng":"hair",
     "syllable1":"pe",
     "syllable2":"lo"
   },
   {
     "lemma":"pepe",
+    "eng":"pepper",
     "syllable1":"pe",
     "syllable2":"pe"
   },
   {
     "lemma":"pera",
+    "eng":"pear",
     "syllable1":"pe",
     "syllable2":"ra"
   },
   {
     "lemma":"pino",
+    "eng":"pine",
     "syllable1":"pi",
     "syllable2":"no"
   },
   {
     "lemma":"pipa",
+    "eng":"pipe",
     "syllable1":"pi",
     "syllable2":"pa"
   },
   {
     "lemma":"puma",
+    "eng":"puma",
     "syllable1":"pu",
     "syllable2":"ma"
   },
   {
     "lemma":"ramo",
+    "eng":"branch",
     "syllable1":"ra",
     "syllable2":"mo"
   },
   {
     "lemma":"rana",
+    "eng":"frog",
     "syllable1":"ra",
     "syllable2":"na"
   },
   {
     "lemma":"rema",
+    "eng":"row",
     "syllable1":"re",
     "syllable2":"ma"
   },
   {
     "lemma":"remo",
+    "eng":"oar",
     "syllable1":"re",
     "syllable2":"mo "
   },
   {
     "lemma":"riso",
+    "eng":"rice",
     "syllable1":"ri",
     "syllable2":"so"
   },
   {
     "lemma":"rosa",
+    "eng":"rose",
     "syllable1":"ro",
     "syllable2":"sa"
   },
   {
     "lemma":"sala",
+    "eng":"room",
     "syllable1":"sa",
     "syllable2":"la"
   },
   {
     "lemma":"sale",
+    "eng":"salt",
     "syllable1":"sa",
     "syllable2":"le"
   },
   {
     "lemma":"seme",
+    "eng":"beam",
     "syllable1":"se",
     "syllable2":"me"
   },
   {
     "lemma":"sera",
+    "eng":"evening",
     "syllable1":"se",
     "syllable2":"ra"
   },
   {
     "lemma":"sole",
+    "eng":"sun",
     "syllable1":"so",
     "syllable2":"le"
   },
   {
     "lemma":"sugo",
+    "eng":"sauce",
     "syllable1":"su",
     "syllable2":"go"
   },
   {
     "lemma":"tana",
+    "eng":"den",
     "syllable1":"ta",
     "syllable2":"na"
   },
   {
     "lemma":"tata",
+    "eng":"nanny",
     "syllable1":"ta",
     "syllable2":"ta"
   },
   {
     "lemma":"topo",
+    "eng":"mouse",
     "syllable1":"to",
     "syllable2":"po"
   },
   {
     "lemma":"toro",
+    "eng":"bull",
     "syllable1":"to",
     "syllable2":"ro"
   },
   {
     "lemma":"tubo",
+    "eng":"tube",
     "syllable1":"tu",
     "syllable2":"bo"
   },
   {
     "lemma":"tuta",
+    "eng":"suit",
     "syllable1":"tu",
     "syllable2":"ta"
   },
   {
     "lemma":"vaso",
+    "eng":"vase",
     "syllable1":"va",
     "syllable2":"so"
   },
   {
     "lemma":"vela",
+    "eng":"sail",
     "syllable1":"ve",
     "syllable2":"la"
   },
   {
     "lemma":"vene",
+    "eng":"veins",
     "syllable1":"ve",
     "syllable2":"ne"
   },
   {
     "lemma":"viso",
+    "eng":"face",
     "syllable1":"vi",
     "syllable2":"so"
   },
   {
     "lemma":"vita",
+    "eng":"life",
     "syllable1":"vi",
     "syllable2":"ta"
   },
   {
     "lemma":"voce",
+    "eng":"voice",
     "syllable1":"vo",
     "syllable2":"ce"
   },
   {
     "lemma":"zero",
+    "eng":"zero",
     "syllable1":"ze",
     "syllable2":"ro"
   }
