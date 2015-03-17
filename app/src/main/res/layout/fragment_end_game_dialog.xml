@@ -1,0 +1,59 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="@dimen/word_confirmed_dialog_width"
+             android:layout_height="wrap_content"
+             android:orientation="vertical"
+             android:gravity="center_horizontal"
+             tools:context="it.gbresciani.poligame.fragments.WordConfirmDialogFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="@dimen/word_confirmed_dialog_width"
+        android:layout_height="200dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/word_textview"
+            android:textAllCaps="true"
+            android:padding="@dimen/dialog_word_padding"
+            android:textColor="@color/orange_dark"
+            android:visibility="visible"
+            android:textStyle="bold"
+            android:textSize="30dp"
+            android:gravity="center"
+            android:text="@string/message_end"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/linearLayout">
+
+        <ImageView
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:id="@+id/exit_button_dialog"
+            android:paddingBottom="@dimen/dialog_button_padding"
+            android:paddingTop="@dimen/dialog_button_padding"
+            android:src="@drawable/exit_selector"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:id="@+id/repeat_button_dialog"
+            android:paddingBottom="@dimen/dialog_button_padding"
+            android:paddingTop="@dimen/dialog_button_padding"
+            android:src="@drawable/repeat_selector"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+</LinearLayout>
