@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 
 import com.orm.query.Condition;
@@ -78,7 +79,8 @@ public class GenericIntentService extends IntentService {
         long minutes = TimeUnit.MILLISECONDS.toMinutes(gameTime);
         long relativeSeconds = seconds % 60;
         String subject = "Partita " + String.valueOf(gameStatId);
-        String body = "Tempo totale: " + String.format("%02d", minutes) + ":" + String.format("%02d", relativeSeconds) + "\n";
+        String body = "Dispositivo: " + Build.ID + "\n";
+        body += "Tempo totale: " + String.format("%02d", minutes) + ":" + String.format("%02d", relativeSeconds) + "\n";
         for(WordStat ws : wordStats){
             long wordTime = ws.getFoundDate().getTime() - gameStat.getStartDate().getTime();
             long wordSeconds = TimeUnit.MILLISECONDS.toSeconds(wordTime);
