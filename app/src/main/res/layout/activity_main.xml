@@ -11,32 +11,18 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="it.gbresciani.poligame.activities.PlayActivity">
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textStyle="bold"
-        android:textColor="@color/background_material_dark"
-        android:textAllCaps="true"
-        android:textSize="75dp"
-        android:layout_centerInParent="true"/>
-
     <LinearLayout
         android:id="@+id/play_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_below="@+id/title"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="70dp">
+        android:layout_centerInParent="true">
 
         <ImageButton
             android:id="@+id/play_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="36dp"
-            android:layout_marginRight="36dp"
+            android:layout_marginRight="128dp"
             android:background="@drawable/single_player_selector"/>
 
         <ImageButton
@@ -52,25 +38,23 @@
         android:layout_height="wrap_content"
         android:indeterminate="true"
         android:visibility="invisible"
-        android:layout_below="@+id/title"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="70dp"/>
-
-    <Button
-        android:id="@+id/settings_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:text="@string/settings_text"
-        android:layout_alignParentRight="true"/>
+        android:layout_centerInParent="true"/>
 
     <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="@dimen/main_page_logo_dimen"
-        android:layout_height="@dimen/main_page_logo_dimen"
-        android:src="@drawable/icona_puzzle"
-        android:layout_marginBottom="25dp"
-        android:layout_above="@+id/title"
-        android:layout_centerHorizontal="true"/>
+        android:id="@+id/settings_button"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/settings_selector"
+        android:layout_alignParentLeft="true"/>
+
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/logo"
+        android:layout_alignParentRight="true"/>
 
 </RelativeLayout>
