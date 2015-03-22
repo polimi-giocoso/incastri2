@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/holo_green_light"
+    <item android:drawable="@drawable/dialog_ok_button_pressed"
           android:state_pressed="true"/>
-    <item android:drawable="@android:color/holo_green_light"
+    <item android:drawable="@drawable/dialog_ok_button"
           android:state_focused="true"/>
-    <item android:drawable="@android:color/holo_green_dark"/>
+    <item android:drawable="@drawable/dialog_ok_button"/>
 </selector>
