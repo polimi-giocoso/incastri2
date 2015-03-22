@@ -2,6 +2,7 @@ package it.gbresciani.poligame.fragments;
 
 
 import android.app.DialogFragment;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -65,6 +66,21 @@ public class EndGameDialogFragment extends DialogFragment {
         ButterKnife.inject(this, v);
 
         return v;
+    }
+
+    @Override public void onStart() {
+        super.onStart();
+
+        if (getDialog() == null) {
+            return;
+        }
+
+        int dialogWidth = 1200;
+        int dialogHeight = 1200;
+
+        getDialog().getWindow().setLayout(dialogWidth, dialogHeight);
+        getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
     }
 
     @OnClick(R.id.repeat_button_dialog)
