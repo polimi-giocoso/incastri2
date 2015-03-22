@@ -6,6 +6,7 @@ import android.app.Fragment;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -119,9 +120,15 @@ public class WordsFragment extends Fragment {
                 int width = wordsContainerLinearLayout.getMeasuredWidth();
                 int height = wordsContainerLinearLayout.getMeasuredHeight();
 
+                int slotDimen;
                 // Choose, as dimension for one slot, the minimum between the width of the layout and the height divided
                 // by the number of slots to be drawn minus two margins
-                int slotDimen = Math.min(width, (height / wordsToFind));
+                try {
+                    slotDimen = Math.min(width, (height / wordsToFind));
+                }catch (ArithmeticException ae){
+                    Log.e("wordsToFind: ", String.valueOf(wordsToFind));
+                    slotDimen = 0;
+                }
 
                 int containerPadding = (int) (getResources().getDimension(R.dimen.left_pane_border_width) * 2);
                 wordsContainerLinearLayout.setPadding(containerPadding, containerPadding, containerPadding, containerPadding);
@@ -197,7 +204,7 @@ public class WordsFragment extends Fragment {
             });
 
             flag.setVisibility(View.VISIBLE);
-            slot.setImageBitmap(loadWordBitmap(slot.getWidth(),slot.getHeight()));
+            slot.setImageBitmap(loadWordBitmap(word, slot.getWidth(),slot.getHeight()));
         }
     }
 
@@ -207,11 +214,11 @@ public class WordsFragment extends Fragment {
      *
      * @return The Bitmap corresponding to the syllable
      */
-    private android.graphics.Bitmap loadWordBitmap(int reqWidth, int reqHeight) {
+    private android.graphics.Bitmap loadWordBitmap(Word word, int reqWidth, int reqHeight) {
 
         InputStream ims = null;
         try {
-            ims = mActivity.getAssets().open("words_images/puzzle_pieno.png");
+            ims = mActivity.getAssets().open("words_images/" + word.getLemma() + ".png");
         } catch (IOException e) {
             e.printStackTrace();
         }
