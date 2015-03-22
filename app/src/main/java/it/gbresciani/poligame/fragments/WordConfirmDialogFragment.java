@@ -1,20 +1,25 @@
 package it.gbresciani.poligame.fragments;
 
 
-import android.animation.Animator;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
-import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.res.Resources;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Property;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.ScaleAnimation;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.squareup.otto.Bus;
@@ -32,10 +37,11 @@ import it.gbresciani.poligame.helper.BusProvider;
 
 public class WordConfirmDialogFragment extends DialogFragment {
     private static final String ARG_PARAM1 = "word";
-    public static final int WORD_DIALOG_TIMEOUT = 500;
+    public static final int WORD_DIALOG_TIMEOUT = 1000;
 
     private String word;
     @InjectView(R.id.word_textview) TextView wordTextView;
+    @InjectView(R.id.confirm_dialog_layout) RelativeLayout confirmDialogLayout;
     @InjectView(R.id.ok_button) ImageButton okButton;
     @InjectView(R.id.no_button) ImageButton noButton;
 
@@ -96,6 +102,21 @@ public class WordConfirmDialogFragment extends DialogFragment {
         return v;
     }
 
+    @Override public void onStart() {
+        super.onStart();
+
+        if (getDialog() == null) {
+            return;
+        }
+
+        int dialogWidth = 1200;
+        int dialogHeight = 1200;
+
+        getDialog().getWindow().setLayout(dialogWidth, dialogHeight);
+        getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+    }
+
     @OnClick(R.id.ok_button)
     public void ok() {
         BUS.post(new WordConfirmedEvent(word));
@@ -124,28 +145,53 @@ public class WordConfirmDialogFragment extends DialogFragment {
             }
         };
 
-        final ObjectAnimator animator;
+
+        final WordSelectedEvent wordEvent = wordSelectedEvent;
+
+        final ObjectAnimator animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.white));
+        animator.setDuration(100);
+        animator.setEvaluator(new ArgbEvaluator());
+        animator.setInterpolator(new AccelerateInterpolator(1));
+
+
+        ScaleAnimation scaleAnimation = new ScaleAnimation(1f, 0f, 1f, 0f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+
+        scaleAnimation.setInterpolator(new DecelerateInterpolator());
+        scaleAnimation.setFillEnabled(true);
+        scaleAnimation.setFillAfter(true);
+        scaleAnimation.setDuration(100);
+
         if (wordSelectedEvent.isCorrect()) {
             if (wordSelectedEvent.isNew()) {
-                animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.holo_green_light));
+
             } else {
                 // Skip color animation
                 dismiss();
                 return;
             }
         } else {
-            animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.holo_red_light));
         }
-        animator.setDuration(200);
-        animator.setEvaluator(new ArgbEvaluator());
-        animator.setInterpolator(new AccelerateInterpolator(1));
 
-        animator.addListener(new Animator.AnimatorListener() {
-            @Override public void onAnimationStart(Animator animation) {
+        Drawable noBackgrounds[] = new Drawable[2];
+        Drawable okBackgrounds[] = new Drawable[2];
+        Resources res = getResources();
+        noBackgrounds[0] = res.getDrawable(R.drawable.dialog_bg);
+        okBackgrounds[0] = res.getDrawable(R.drawable.dialog_bg);
+        noBackgrounds[1] = res.getDrawable(R.drawable.dialog_no_bg);
+        okBackgrounds[1] = res.getDrawable(R.drawable.dialog_ok_bg);
+
+        final TransitionDrawable noCrossfader = new TransitionDrawable(noBackgrounds);
+        final TransitionDrawable okCrossfader = new TransitionDrawable(okBackgrounds);
+
+        scaleAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override public void onAnimationStart(Animation animation) {
 
             }
 
-            @Override public void onAnimationEnd(Animator animation) {
+            @Override public void onAnimationEnd(Animation animation) {
+
                 (new Handler()).postDelayed(new Runnable() {
                     @Override public void run() {
                         dismiss();
@@ -153,15 +199,28 @@ public class WordConfirmDialogFragment extends DialogFragment {
                 }, WORD_DIALOG_TIMEOUT);
             }
 
-            @Override public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override public void onAnimationRepeat(Animator animation) {
+            @Override public void onAnimationRepeat(Animation animation) {
 
             }
         });
 
-        animator.start();
+        if (wordEvent.isCorrect()) {
+            if (wordEvent.isNew()) {
+                confirmDialogLayout.setBackground(okCrossfader);
+                animator.start();
+            } else {
+                // Skip color animation
+                dismiss();
+                return;
+            }
+        } else {
+            confirmDialogLayout.setBackground(noCrossfader);
+            animator.start();
+        }
+
+        okCrossfader.startTransition(100);
+        noCrossfader.startTransition(100);
+        okButton.startAnimation(scaleAnimation);
+        noButton.startAnimation(scaleAnimation);
     }
 }
