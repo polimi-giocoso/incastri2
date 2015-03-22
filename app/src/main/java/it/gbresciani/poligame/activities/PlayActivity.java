@@ -138,6 +138,7 @@ public class PlayActivity extends FragmentActivity {
      */
     private void restartGame() {
         gameStat = new GameStat();
+        wordStats = new ArrayList<>();
         gameStat.setStartDate(new Date());
         currentPageNum = 0;
         syllableYetSelected = "";
@@ -408,13 +409,6 @@ public class PlayActivity extends FragmentActivity {
         EndGameDialogFragment ed = EndGameDialogFragment.newInstance();
 
         ed.show(ft, "endDialog");
-    }
-
-    private void hideStatusBar() {
-        View decorView = getWindow().getDecorView();
-        // Hide the status bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
     }
 
 
