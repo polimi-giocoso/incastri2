@@ -5,16 +5,16 @@
     <PreferenceCategory
         android:key="pref_game_settings"
         android:title="@string/pref_title_game">
-        <it.gbresciani.poligame.customUIElements.SyllablesPreference
+        <it.gbresciani.legodigitalsonoro.customUIElements.SyllablesPreference
             android:defaultValue="4"
             android:dialogTitle="@string/setting_no_syllables_title"
             android:key="@string/setting_no_syllables_key"
             android:summary="4"
             android:title="@string/setting_no_syllables_title">
 
-        </it.gbresciani.poligame.customUIElements.SyllablesPreference>
+        </it.gbresciani.legodigitalsonoro.customUIElements.SyllablesPreference>
 
-        <it.gbresciani.poligame.customUIElements.NumberPickerPreference
+        <it.gbresciani.legodigitalsonoro.customUIElements.NumberPickerPreference
             android:defaultValue="1"
             android:dialogTitle="@string/setting_no_pages_title"
             android:key="@string/setting_no_pages_key"
@@ -22,26 +22,26 @@
             android:title="@string/setting_no_pages_title"
             custom:max="10"
             custom:min="1">
-        </it.gbresciani.poligame.customUIElements.NumberPickerPreference>
+        </it.gbresciani.legodigitalsonoro.customUIElements.NumberPickerPreference>
     </PreferenceCategory>
 
     <PreferenceCategory
         android:key="pref_others_settings"
         android:title="@string/pref_title_data_collect">
 
-        <it.gbresciani.poligame.customUIElements.DataCollectPreference
+        <it.gbresciani.legodigitalsonoro.customUIElements.DataCollectPreference
             android:key="@string/setting_collect_key"
             android:defaultValue="false"
             android:summaryOff="@string/setting_collect_summary_off"
             android:summaryOn="@string/setting_collect_summary_on"
             android:title="@string/setting_collect_title">
-        </it.gbresciani.poligame.customUIElements.DataCollectPreference>
-        <it.gbresciani.poligame.customUIElements.EmailPreference
+        </it.gbresciani.legodigitalsonoro.customUIElements.DataCollectPreference>
+        <it.gbresciani.legodigitalsonoro.customUIElements.EmailPreference
             android:defaultValue=""
             android:key="@string/setting_email_key"
             android:summary="@string/pref_title_game"
             android:title="@string/setting_email_title">
-        </it.gbresciani.poligame.customUIElements.EmailPreference>
+        </it.gbresciani.legodigitalsonoro.customUIElements.EmailPreference>
     </PreferenceCategory>
 
 </PreferenceScreen>

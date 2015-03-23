@@ -4,7 +4,7 @@
               android:layout_height="match_parent"
               android:orientation="vertical"
               android:id="@+id/words_container"
-              tools:context="it.gbresciani.poligame.fragments.WordsFragment"
+              tools:context="it.gbresciani.legodigitalsonoro.fragments.WordsFragment"
               android:gravity="center">
 
 </LinearLayout>
