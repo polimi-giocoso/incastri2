@@ -25,5 +25,10 @@
     <dimen name="left_pane_border_width">5dp</dimen>
     <dimen name="main_page_logo_dimen">250dp</dimen>
     <dimen name="small_button_dimen">84dp</dimen>
-    <dimen name="small_button_margin">64dp</dimen>
+    <dimen name="small_button_margin">32dp</dimen>
+    <dimen name="main_buttons_margin">16dp</dimen>
+    <dimen name="title_bottom_margin">30dp</dimen>
+    <dimen name="title_height">251dp</dimen>
+    <dimen name="title_width">400dp</dimen>
+    <dimen name="play_buttons_dimen">180dp</dimen>
 </resources>

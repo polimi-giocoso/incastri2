@@ -5,27 +5,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/home_bg"
-    tools:context="it.gbresciani.poligame.activities.PlayActivity">
+    tools:context="it.gbresciani.legodigitalsonoro.activities.PlayActivity">
 
     <LinearLayout
-        android:id="@+id/play_layout"
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:gravity="center"
         android:layout_centerInParent="true">
 
-        <ImageButton
-            android:id="@+id/play_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="128dp"
-            android:background="@drawable/single_player_selector"/>
+        <ImageView
+            android:layout_width="@dimen/title_width"
+            android:layout_height="@dimen/title_height"
+            android:id="@+id/title_image_view"
+            android:src="@drawable/app_title"
+            android:layout_marginBottom="@dimen/title_bottom_margin"/>
 
-        <ImageButton
-            android:id="@+id/play_multi_button"
+        <LinearLayout
+            android:id="@+id/play_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/multiple_player_selector"/>
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/play_button"
+                android:layout_width="@dimen/play_buttons_dimen"
+                android:layout_height="@dimen/play_buttons_dimen"
+                android:layout_marginRight="@dimen/main_buttons_margin"
+                android:layout_marginEnd="@dimen/main_buttons_margin"
+                android:background="@drawable/single_player_selector"/>
+
+            <ImageButton
+                android:id="@+id/play_multi_button"
+                android:layout_width="@dimen/play_buttons_dimen"
+                android:layout_height="@dimen/play_buttons_dimen"
+                android:background="@drawable/multiple_player_selector"/>
+        </LinearLayout>
     </LinearLayout>
 
     <ProgressBar
