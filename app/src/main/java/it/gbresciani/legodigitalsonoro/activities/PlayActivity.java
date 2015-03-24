@@ -1,7 +1,12 @@
 package it.gbresciani.legodigitalsonoro.activities;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -13,6 +18,9 @@ import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.otto.Bus;
@@ -24,8 +32,13 @@ import java.util.List;
 import java.util.Locale;
 
 import butterknife.ButterKnife;
+import butterknife.InjectView;
 import it.gbresciani.legodigitalsonoro.R;
+import it.gbresciani.legodigitalsonoro.events.ConnectedDeviceNameEvent;
+import it.gbresciani.legodigitalsonoro.events.ConnectionStateChangeEvent;
 import it.gbresciani.legodigitalsonoro.events.ExitEvent;
+import it.gbresciani.legodigitalsonoro.events.MessageReadEvent;
+import it.gbresciani.legodigitalsonoro.events.MessageWriteEvent;
 import it.gbresciani.legodigitalsonoro.events.NextPageEvent;
 import it.gbresciani.legodigitalsonoro.events.PageCompletedEvent;
 import it.gbresciani.legodigitalsonoro.events.RepeatEvent;
@@ -45,6 +58,7 @@ import it.gbresciani.legodigitalsonoro.model.GameStat;
 import it.gbresciani.legodigitalsonoro.model.Syllable;
 import it.gbresciani.legodigitalsonoro.model.Word;
 import it.gbresciani.legodigitalsonoro.model.WordStat;
+import it.gbresciani.legodigitalsonoro.services.BluetoothService;
 import it.gbresciani.legodigitalsonoro.services.GenericIntentService;
 
 
@@ -52,6 +66,15 @@ import it.gbresciani.legodigitalsonoro.services.GenericIntentService;
  * This Activity contains the two fragments (words and syllables) and manages the game logic using bus messages
  */
 public class PlayActivity extends FragmentActivity {
+
+    private static final String TAG = "PlayActivity";
+
+    public static final String MODE_SINGLE_PLAYER = "mode_single_player";
+    public static final String MODE_MULTI_PLAYER = "mode_multi_player";
+
+    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_TTS_CHECK = 3;
 
     // Pref
     private int noPages;
@@ -63,6 +86,10 @@ public class PlayActivity extends FragmentActivity {
     private int currentPageNum = 0;
     private String syllableYetSelected = "";
     private int backPressedCount = 0;
+
+    // Multi
+    private boolean multi;
+    private boolean masterRole = false;
 
     // Helpers
     private Handler timeoutHandler;
@@ -77,11 +104,21 @@ public class PlayActivity extends FragmentActivity {
     // TTS
     private TextToSpeech mTTS;
     private boolean ttsConfigured = false;
-    private int TTS_CHECK_ITA = 0;
 
     // Stats
     private GameStat gameStat;
     private ArrayList<WordStat> wordStats = new ArrayList<>();
+
+    // Bluetooth
+    private BluetoothAdapter mBluetoothAdapter = null;
+    private BluetoothService mBluetoothService = null;
+    private String mConnectedDeviceName;
+
+    // UI
+    @InjectView(R.id.connection_text_view) TextView connTextView;
+    @InjectView(R.id.game_loading_progress_bar) ProgressBar progressBar;
+    private PlayActivity mActivity;
+    private AlertDialog newGameAlertDialog;
 
 
     /* ----------------------------- Activity Lifecycle Methods ----------------------------- */
@@ -95,17 +132,49 @@ public class PlayActivity extends FragmentActivity {
         timeoutHandler = new Handler();
         ButterKnife.inject(this);
 
+        mActivity = this;
+
         loadPref();
         loadSound();
         checkTTS();
 
-        startGame();
+        // Single or Multi player (default single)
+        Intent playIntent = getIntent();
+        String action = playIntent.getAction();
+        switch (action) {
+            case MODE_SINGLE_PLAYER:
+                multi = false;
+                startGame();
+                break;
+            case MODE_MULTI_PLAYER:
+                multi = true;
+                // If Bluetooth is supported and enabled show dialog
+                if (initBluetooth() && enableBluetooth()) {
+                    setupMultiPlayer();
+                }
+                break;
+            default:
+                multi = false;
+                startGame();
+                break;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         BUS.register(this);
+
+        // Performing this check in onResume() covers the case in which BT was
+        // not enabled during onStart(), so we were paused to enable it...
+        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+        if (mBluetoothService != null) {
+            // Only if the state is STATE_NONE, do we know that we haven't started already
+            if (mBluetoothService.getState() == BluetoothService.STATE_NONE) {
+                // Start the Bluetooth chat services
+                mBluetoothService.start();
+            }
+        }
     }
 
     @Override
@@ -119,6 +188,9 @@ public class PlayActivity extends FragmentActivity {
             mTTS.stop();
             mTTS.shutdown();
         }
+        if (mBluetoothService != null) {
+            mBluetoothService.stop();
+        }
         super.onDestroy();
     }
 
@@ -127,6 +199,46 @@ public class PlayActivity extends FragmentActivity {
             super.onBackPressed();
         }
         backPressedCount++;
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CONNECT_DEVICE_SECURE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    connectDevice(data);
+                }
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    finish();
+                }
+                break;
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, show dialog and start the service
+                    setupMultiPlayer();
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    Log.d(TAG, "Bluetooth not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled,
+                            Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            case REQUEST_TTS_CHECK:
+                if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                    mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                        @Override public void onInit(int status) {
+                            ttsConfigured = true;
+                            mTTS.setLanguage(Locale.ITALIAN);
+                        }
+                    });
+                } else {
+                    Intent installTTSIntent = new Intent();
+                    installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                    startActivity(installTTSIntent);
+                }
+        }
     }
 
 
@@ -203,6 +315,19 @@ public class PlayActivity extends FragmentActivity {
             }
         }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT * 2);
     }
+
+    /**
+     * Make connection text view visible and start all Multi Player process before starting the game
+     */
+    private void setupMultiPlayer() {
+        connTextView.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
+        startBluetoothService();
+        showMultiPlayerDialog();
+    }
+
+     /* ----------------------------- Helper Methods ----------------------------- */
+
 
     /**
      * Show the dialog to confirm a word
@@ -342,6 +467,62 @@ public class PlayActivity extends FragmentActivity {
         sayWord(wordClickedEvent.getWord(), wordClickedEvent.getLANG());
     }
 
+    /**
+     * React to a ConnectionStateChangeEvent
+     */
+    @Subscribe public void connectionStateChangeEvent(ConnectionStateChangeEvent connectionStateChangeEvent) {
+        switch (connectionStateChangeEvent.getNewState()) {
+            case BluetoothService.STATE_CONNECTED:
+                if(null != mConnectedDeviceName) {
+                    connTextView.setText("(" + String.valueOf(masterRole) + ") " + getString(R.string.bluetooth_connected) + " a " + mConnectedDeviceName);
+                }else{
+                    connTextView.setText(R.string.bluetooth_connected);
+                }
+                break;
+            case BluetoothService.STATE_CONNECTING:
+                connTextView.setText(R.string.bluetooth_connecting);
+                break;
+            case BluetoothService.STATE_LOST:
+                connTextView.setText(R.string.bluetooth_listening);
+                Toast.makeText(this, "Connessione persa", Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+            case BluetoothService.STATE_FAILED:
+                connTextView.setText(R.string.bluetooth_listening);
+                Toast.makeText(this, "Connessione fallita", Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+            case BluetoothService.STATE_LISTEN:
+                connTextView.setText(R.string.bluetooth_listening);
+                break;
+            case BluetoothService.STATE_NONE:
+                connTextView.setText(R.string.bluetooth_conn_def);
+                break;
+        }
+    }
+
+    /**
+     * React to a MessageWriteEvent
+     */
+    @Subscribe public void messageWriteEvent(MessageWriteEvent messageWriteEvent) {
+    }
+
+    /**
+     * React to a MessageWriteEvent
+     */
+    @Subscribe public void messageReadEvent(MessageReadEvent messageReadEvent) {
+    }
+
+    /**
+     * React to a ConnectedDeviceNameEvent
+     */
+    @Subscribe public void connectedDeviceNameEvent(ConnectedDeviceNameEvent connectedDeviceNameEvent) {
+        mConnectedDeviceName = connectedDeviceNameEvent.getName();
+        connTextView.setText("Connesso a " + mConnectedDeviceName);
+        Toast.makeText(this, "Connesso a " + connectedDeviceNameEvent.getName(), Toast.LENGTH_SHORT).show();
+        newGameAlertDialog.dismiss();
+    }
+
 
     /* ----------------------------- Helper Methods ----------------------------- */
 
@@ -446,26 +627,115 @@ public class PlayActivity extends FragmentActivity {
     private void checkTTS() {
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-        startActivityForResult(checkTTSIntent, TTS_CHECK_ITA);
+        startActivityForResult(checkTTSIntent, REQUEST_TTS_CHECK);
+    }
+
+
+    /* ----------------------------- Bluetooth Methods ----------------------------- */
+
+
+    /**
+     * Initialize the bluetooth connection and return if the Bluetooth is supported
+     */
+    private boolean initBluetooth() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        // If the adapter is null, then Bluetooth is not supported
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
     }
 
     /**
-     * Called on TTS check
+     * If Bluetooth is not enabled, requests to enable it (the bluetooth enable request is async, look for {@link MainActivity#onActivityResult}
+     *
+     * @return whether it was enabled
      */
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == TTS_CHECK_ITA) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-                    @Override public void onInit(int status) {
-                        ttsConfigured = true;
-                        mTTS.setLanguage(Locale.ITALIAN);
-                    }
-                });
-            } else {
-                Intent installTTSIntent = new Intent();
-                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installTTSIntent);
-            }
+    private boolean enableBluetooth() {
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            return false;
         }
+        return true;
+    }
+
+    /**
+     * Makes this device discoverable.
+     */
+    private void ensureDiscoverable() {
+        if (mBluetoothAdapter.getScanMode() !=
+                BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+            startActivity(discoverableIntent);
+        }
+    }
+
+    /**
+     * Starts the service that handles bluetooth connections
+     */
+    private void startBluetoothService() {
+        if (mBluetoothService == null) {
+            mBluetoothService = new BluetoothService(this, BUS);
+        }
+    }
+
+
+    private void showMultiPlayerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        newGameAlertDialog = builder.setTitle(getString(R.string.new_game_multi_dialog_title))
+                .setMessage(getString(R.string.new_game_multi_message))
+                .setPositiveButton(getString(R.string.new_game_multi), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        showDeviceListActivity();
+                        masterRole = true;
+                    }
+                })
+                .setNeutralButton(getString(R.string.button_discoverable), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        mActivity.finish();
+                        dialog.dismiss();
+                    }
+                })
+                .setCancelable(false)
+                .create();
+
+        newGameAlertDialog.show();
+        // Prevent the dialog to close on click
+        newGameAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                ensureDiscoverable();
+            }
+        });
+    }
+
+    /**
+     * Establish connection with other device
+     *
+     * @param data An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
+     */
+    private void connectDevice(Intent data) {
+        // Get the device MAC address
+        String address = data.getExtras()
+                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+        // Get the BluetoothDevice object
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        // Attempt to connect to the device
+        mBluetoothService.connect(device);
+    }
+
+    /**
+     * Start device connection activity
+     */
+    private void showDeviceListActivity() {
+        Intent serverIntent = new Intent(this, DeviceListActivity.class);
+        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
     }
 }
