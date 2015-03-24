@@ -53,33 +53,39 @@ import it.gbresciani.legodigitalsonoro.services.GenericIntentService;
  */
 public class PlayActivity extends FragmentActivity {
 
+    // Pref
     private int noPages;
-    private int currentPageNum = 0;
     private int noSyllables;
-    private String syllableYetSelected = "";
-    private int backPressedCount = 0;
 
     // Game Page state variables
     private int currentPageWordsToFindNum;
     private ArrayList<Word> currentPageWordsAvailable;
+    private int currentPageNum = 0;
+    private String syllableYetSelected = "";
+    private int backPressedCount = 0;
 
+    // Helpers
     private Handler timeoutHandler;
     private Bus BUS;
     private SoundPool soundPool;
 
+    // Sounds
     private int correctSound;
     private int wrongSound;
     private int sameSound;
 
+    // TTS
     private TextToSpeech mTTS;
     private boolean ttsConfigured = false;
     private int TTS_CHECK_ITA = 0;
 
-    private WordsFragment currentWordsFragment;
-    private SyllablesFragment currentSyllablesFragment;
-
+    // Stats
     private GameStat gameStat;
     private ArrayList<WordStat> wordStats = new ArrayList<>();
+
+
+    /* ----------------------------- Activity Lifecycle Methods ----------------------------- */
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,6 +129,10 @@ public class PlayActivity extends FragmentActivity {
         backPressedCount++;
     }
 
+
+    /* ----------------------------- Game Flow Methods ----------------------------- */
+
+
     /**
      * Start the game
      */
@@ -145,7 +155,6 @@ public class PlayActivity extends FragmentActivity {
         nextPage();
     }
 
-
     /**
      * Initialize a page, adding the two fragments and passing them the calculated syllables and words
      */
@@ -162,15 +171,18 @@ public class PlayActivity extends FragmentActivity {
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        currentWordsFragment = WordsFragment.newInstance(currentPageWordsAvailable);
-        currentSyllablesFragment = SyllablesFragment.newInstance(syllables);
+        WordsFragment wordsFragment = WordsFragment.newInstance(currentPageWordsAvailable);
+        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(syllables);
 
-        ft.replace(R.id.words_frame_layout, currentWordsFragment);
-        ft.replace(R.id.syllables_frame_layout, currentSyllablesFragment);
+        ft.replace(R.id.words_frame_layout, wordsFragment);
+        ft.replace(R.id.syllables_frame_layout, syllablesFragment);
 
         ft.commit();
     }
 
+    /**
+     * Replace the syllables fragment with a PageCompletedFragment
+     */
     private void showPageCompleted() {
 
         Handler h = new Handler();
@@ -191,6 +203,32 @@ public class PlayActivity extends FragmentActivity {
             }
         }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT * 2);
     }
+
+    /**
+     * Show the dialog to confirm a word
+     *
+     * @param word the selected word
+     */
+    private void showWordConfirmDialog(String word) {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        WordConfirmDialogFragment wd = WordConfirmDialogFragment.newInstance(word);
+
+        wd.show(ft, "dialog");
+    }
+
+    /**
+     * Show the end game dialog
+     */
+    private void showEndDialog() {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        EndGameDialogFragment ed = EndGameDialogFragment.newInstance();
+
+        ed.show(ft, "endDialog");
+    }
+
+
+    /* ----------------------------- Bus Events Methods ----------------------------- */
+
 
     /**
      * React to a PageCompletedEvent, changing the layout
@@ -283,7 +321,6 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
-
     /**
      * React to a ExitEvent
      */
@@ -305,44 +342,13 @@ public class PlayActivity extends FragmentActivity {
         sayWord(wordClickedEvent.getWord(), wordClickedEvent.getLANG());
     }
 
-    /*  Helper Methods  */
+
+    /* ----------------------------- Helper Methods ----------------------------- */
 
 
-    private void sayWord(Word word, String lang) {
-        if (ttsConfigured) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                if (WordClickedEvent.ENGLISH.equals(lang)) {
-                    mTTS.setLanguage(Locale.ENGLISH);
-                    mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
-                } else {
-                    mTTS.setLanguage(Locale.ITALIAN);
-                    mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
-                }
-            } else {
-                if (WordClickedEvent.ENGLISH.equals(lang)) {
-                    mTTS.setLanguage(Locale.ENGLISH);
-                    mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null);
-                } else {
-                    mTTS.setLanguage(Locale.ITALIAN);
-                    mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null);
-                }
-            }
-        } else {
-            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void saySyllable(Syllable syllable) {
-        if (ttsConfigured) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mTTS.setLanguage(Locale.ITALIAN);
-                mTTS.speak(syllable.getVal(), TextToSpeech.QUEUE_ADD, null, syllable.getVal());
-            }
-        } else {
-            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
-        }
-    }
-
+    /**
+     * Loads the game sounds
+     */
     private void loadSound() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             soundPool = (new SoundPool.Builder()).build();
@@ -354,6 +360,9 @@ public class PlayActivity extends FragmentActivity {
         sameSound = soundPool.load(this, R.raw.same, 1);
     }
 
+    /**
+     * Loads the game preferences
+     */
     private void loadPref() {
         // Get match configuration
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -361,6 +370,9 @@ public class PlayActivity extends FragmentActivity {
         noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
     }
 
+    /**
+     * Store statistics in the db and send the through email
+     */
     private void storeSendStats() {
         gameStat.save();
         for (WordStat ws : wordStats) {
@@ -388,29 +400,49 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
-    private void showWordConfirmDialog(String word) {
-        // DialogFragment.show() will take care of adding the fragment
-        // in a transaction.  We also want to remove any currently showing
-        // dialog, so make our own transaction and take care of that here.
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
 
-        // Create and show the dialog.
-        WordConfirmDialogFragment wd = WordConfirmDialogFragment.newInstance(word);
+    /* ----------------------------- TTS Methods ----------------------------- */
 
-        wd.show(ft, "dialog");
+
+    /**
+     * Pronounces a Word in the specified language
+     *
+     * @param word The word to pronounce
+     * @param lang The Locale representing the language to use
+     */
+    private void sayWord(Word word, Locale lang) {
+        if (ttsConfigured) {
+            mTTS.setLanguage(lang);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
+
+            } else {
+                mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null);
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private void showEndDialog() {
-
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-
-        // Create and show the dialog.
-        EndGameDialogFragment ed = EndGameDialogFragment.newInstance();
-
-        ed.show(ft, "endDialog");
+    /**
+     * Pronounces a Word in Italian
+     *
+     * @param syllable The syllable to pronounce
+     */
+    private void saySyllable(Syllable syllable) {
+        if (ttsConfigured) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mTTS.setLanguage(Locale.ITALIAN);
+                mTTS.speak(syllable.getVal(), TextToSpeech.QUEUE_ADD, null, syllable.getVal());
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
+        }
     }
 
-
+    /**
+     * startActivityForResult to check the tts support (see {@link PlayActivity#onActivityResult} for response)
+     */
     private void checkTTS() {
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
