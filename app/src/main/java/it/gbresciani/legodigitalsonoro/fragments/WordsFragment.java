@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -189,7 +190,7 @@ public class WordsFragment extends Fragment {
                 @Override public void onClick(View v) {
                     int index = usedSlots.indexOf(v);
                     Word clickWord = foundWords.get(index);
-                    BUS.post(new WordClickedEvent(clickWord, WordClickedEvent.ITALIAN));
+                    BUS.post(new WordClickedEvent(clickWord, Locale.ITALIAN));
                 }
             });
 
@@ -197,7 +198,7 @@ public class WordsFragment extends Fragment {
                 @Override public void onClick(View v) {
                     int index = usedFlags.indexOf(v);
                     Word clickWord = foundWords.get(index);
-                    BUS.post(new WordClickedEvent(clickWord, WordClickedEvent.ENGLISH));
+                    BUS.post(new WordClickedEvent(clickWord, Locale.ENGLISH));
                 }
             });
 

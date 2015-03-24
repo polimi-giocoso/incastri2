@@ -1,19 +1,15 @@
 package it.gbresciani.legodigitalsonoro.events;
 
+import java.util.Locale;
+
 import it.gbresciani.legodigitalsonoro.model.Word;
 
-/**
- * Created by bear on 15/03/15.
- */
 public class WordClickedEvent {
 
-    public static final String ENGLISH= "english";
-    public static final String ITALIAN = "italian";
-
     private Word word;
-    private String LANG;
+    private Locale LANG;
 
-    public WordClickedEvent(Word word, String LANG) {
+    public WordClickedEvent(Word word, Locale LANG) {
         this.word = word;
         this.LANG = LANG;
     }
@@ -22,7 +18,7 @@ public class WordClickedEvent {
         return word;
     }
 
-    public String getLANG() {
+    public Locale getLANG() {
         return LANG;
     }
 }
