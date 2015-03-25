@@ -7,15 +7,19 @@ import java.util.ArrayList;
 import it.gbresciani.legodigitalsonoro.model.Syllable;
 import it.gbresciani.legodigitalsonoro.model.Word;
 
-public class PageInfo {
+public class GameState {
 
-    public final static String PAGE_NUM = "number";
+    public final static String PAGE_NUM = "pageNumber";
+    public final static String PAGES_LEFT = "pagesLeft";
     public final static String PAGE_WORDS_AVAIL = "pageWordsAvailable";
     public final static String PAGE_WORDS_TO_FIND_NUM = "pageWordsToFindNum";
-    public final static String PAGE_SYLLABLES = "syllables";
+    public final static String PAGE_SYLLABLES = "pageSyllables";
 
     @SerializedName(PAGE_NUM)
-    private int number;
+    private int pageNumber;
+
+    @SerializedName(PAGES_LEFT)
+    private int pagesLeft;
 
     @SerializedName(PAGE_WORDS_TO_FIND_NUM)
     private int pageWordsToFindNum;
@@ -26,22 +30,31 @@ public class PageInfo {
     @SerializedName(PAGE_SYLLABLES)
     private ArrayList<Syllable> syllables;
 
-    public PageInfo() {
+    public GameState() {
     }
 
-    public PageInfo(int number, int pageWordsToFindNum, ArrayList<Word> wordsAvailable, ArrayList<Syllable> syllables) {
-        this.number = number;
+    public GameState(int pageNumber, int pagesLeft, int pageWordsToFindNum, ArrayList<Word> wordsAvailable, ArrayList<Syllable> syllables) {
+        this.pageNumber = pageNumber;
+        this.pagesLeft = pagesLeft;
         this.pageWordsToFindNum = pageWordsToFindNum;
         this.wordsAvailable = wordsAvailable;
         this.syllables = syllables;
     }
 
-    public int getNumber() {
-        return number;
+    public int getPageNumber() {
+        return pageNumber;
     }
 
-    public void setNumber(int number) {
-        this.number = number;
+    public void setPageNumber(int pageNumber) {
+        this.pageNumber = pageNumber;
+    }
+
+    public int getPagesLeft() {
+        return pagesLeft;
+    }
+
+    public void setPagesLeft(int pagesLeft) {
+        this.pagesLeft = pagesLeft;
     }
 
     public int getPageWordsToFindNum() {
@@ -50,11 +63,6 @@ public class PageInfo {
 
     public void setPageWordsToFindNum(int pageWordsToFindNum) {
         this.pageWordsToFindNum = pageWordsToFindNum;
-    }
-
-    public void wordFound(Word word){
-        wordsAvailable.remove(word);
-        this.pageWordsToFindNum--;
     }
 
     public ArrayList<Word> getWordsAvailable() {
@@ -73,7 +81,29 @@ public class PageInfo {
         this.syllables = syllables;
     }
 
+    /**
+     * Whether all words are found
+     *
+     * @return true -> all words found, false -> remaining words to find
+     */
     public boolean allWordsFound() {
         return pageWordsToFindNum == 0;
+    }
+
+    /**
+     * Removes word from the available words and decrements the number of words to find
+     * @param word The found word
+     */
+    public void wordFound(Word word){
+        wordsAvailable.remove(word);
+        this.pageWordsToFindNum--;
+    }
+
+    public void nextPageNumber(){
+        pageNumber++;
+    }
+
+    public boolean lastPage(){
+        return pagesLeft == 0;
     }
 }
