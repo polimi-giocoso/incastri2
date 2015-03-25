@@ -414,10 +414,19 @@ public class PlayActivity extends FragmentActivity {
         if (ttsConfigured) {
             mTTS.setLanguage(lang);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
-
+                if(lang.equals(Locale.ENGLISH)){
+                    mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null, word.getEng());
+                }
+                if(lang.equals(Locale.ITALIAN)){
+                    mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
+                }
             } else {
-                mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null);
+                if(lang.equals(Locale.ENGLISH)){
+                    mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null);
+                }
+                if(lang.equals(Locale.ITALIAN)){
+                    mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null);
+                }
             }
         } else {
             Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
