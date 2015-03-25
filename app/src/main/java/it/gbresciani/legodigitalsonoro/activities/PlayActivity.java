@@ -23,6 +23,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -52,8 +53,10 @@ import it.gbresciani.legodigitalsonoro.fragments.PageCompletedFragment;
 import it.gbresciani.legodigitalsonoro.fragments.SyllablesFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordConfirmDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordsFragment;
+import it.gbresciani.legodigitalsonoro.helper.BluetoothMessageHeader;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
 import it.gbresciani.legodigitalsonoro.helper.Helper;
+import it.gbresciani.legodigitalsonoro.helper.PageInfo;
 import it.gbresciani.legodigitalsonoro.model.GameStat;
 import it.gbresciani.legodigitalsonoro.model.Syllable;
 import it.gbresciani.legodigitalsonoro.model.Word;
@@ -81,20 +84,20 @@ public class PlayActivity extends FragmentActivity {
     private int noSyllables;
 
     // Game Page state variables
-    private int currentPageWordsToFindNum;
-    private ArrayList<Word> currentPageWordsAvailable;
-    private int currentPageNum = 0;
     private String syllableYetSelected = "";
     private int backPressedCount = 0;
+    private PageInfo currentPageInfo;
 
     // Multi
     private boolean multi;
     private boolean masterRole = false;
+    private boolean myTurn = false;
 
     // Helpers
     private Handler timeoutHandler;
     private Bus BUS;
     private SoundPool soundPool;
+    private Gson gson;
 
     // Sounds
     private int correctSound;
@@ -131,6 +134,7 @@ public class PlayActivity extends FragmentActivity {
         BUS = BusProvider.getInstance();
         timeoutHandler = new Handler();
         ButterKnife.inject(this);
+        gson = new Gson();
 
         mActivity = this;
 
@@ -251,7 +255,7 @@ public class PlayActivity extends FragmentActivity {
     private void startGame() {
         gameStat = new GameStat();
         gameStat.setStartDate(new Date());
-        nextPage();
+        nextPage(constructPage());
     }
 
     /**
@@ -264,32 +268,45 @@ public class PlayActivity extends FragmentActivity {
         currentPageNum = 0;
         syllableYetSelected = "";
         backPressedCount = 0;
-        nextPage();
+        nextPage(constructPage());
     }
 
     /**
      * Initialize a page, adding the two fragments and passing them the calculated syllables and words
      */
-    private void nextPage() {
+    private void nextPage(PageInfo pageInfo) {
 
-        currentPageNum++;
+        progressBar.setVisibility(View.INVISIBLE);
 
-        // Determine words and syllables for the page
-        ArrayList<Syllable> syllables = Helper.chooseSyllables(noSyllables);
-        currentPageWordsAvailable = Helper.permuteSyllablesInWords(syllables, 2);
-
-        currentPageWordsToFindNum = currentPageWordsAvailable.size() <= 4 ? currentPageWordsAvailable.size() : 4;
+        currentPageInfo = pageInfo;
 
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        WordsFragment wordsFragment = WordsFragment.newInstance(currentPageWordsAvailable);
-        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(syllables);
+        WordsFragment wordsFragment = WordsFragment.newInstance(pageInfo.getWordsAvailable());
+        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(pageInfo.getSyllables());
 
         ft.replace(R.id.words_frame_layout, wordsFragment);
         ft.replace(R.id.syllables_frame_layout, syllablesFragment);
 
         ft.commit();
+    }
+
+    /**
+     * Construct all the parameters need by a page new page
+     */
+    private PageInfo constructPage() {
+        currentPageInfo = new PageInfo();
+        currentPageInfo.setNumber(currentPageInfo.getNumber() + 1);
+
+        // Determine words and syllables for the page
+        currentPageInfo.setSyllables(Helper.chooseSyllables(noSyllables));
+        currentPageInfo.setWordsAvailable(Helper.permuteSyllablesInWords(currentPageInfo.getSyllables(), 2));
+        if (multi && masterRole) {
+            sendMessage(BluetoothMessageHeader.PAGE_INFO + gson.toJson(currentPageInfo, PageInfo.class));
+        }
+        currentPageInfo.setPageWordsToFindNum(currentPageInfo.getWordsAvailable().size() <= 4 ? currentPageInfo.getWordsAvailable().size() : 4);
+        return currentPageInfo;
     }
 
     /**
@@ -351,6 +368,45 @@ public class PlayActivity extends FragmentActivity {
         ed.show(ft, "endDialog");
     }
 
+    private void showMultiPlayerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        newGameAlertDialog = builder.setTitle(getString(R.string.new_game_multi_dialog_title))
+                .setMessage(getString(R.string.new_game_multi_message))
+                .setPositiveButton(getString(R.string.new_game_multi), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        showDeviceListActivity();
+                        masterRole = true;
+                    }
+                })
+                .setNeutralButton(getString(R.string.button_discoverable), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        mActivity.finish();
+                        dialog.dismiss();
+                    }
+                })
+                .setCancelable(false)
+                .create();
+
+        newGameAlertDialog.show();
+        // Prevent the dialog to close on click
+        newGameAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                ensureDiscoverable();
+            }
+        });
+    }
+
+    private void passTurn(){
+        if(!myTurn){
+            return;
+        }
+
+    }
+
 
     /* ----------------------------- Bus Events Methods ----------------------------- */
 
@@ -360,7 +416,7 @@ public class PlayActivity extends FragmentActivity {
      */
     @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
         // If last page store stats
-        if (currentPageNum == noPages) {
+        if (currentPageInfo.getPageNum() == noPages) {
             gameStat.setEndDate(new Date());
             storeSendStats();
         }
@@ -371,10 +427,10 @@ public class PlayActivity extends FragmentActivity {
      * React to a NextPageEvent, opening a new one or ending the game
      */
     @Subscribe public void nextPage(NextPageEvent nextPageEvent) {
-        if (currentPageNum == noPages) {
+        if (currentPageInfo.getNumber() == noPages) {
             showEndDialog();
         } else {
-            nextPage();
+            nextPage(constructPage());
         }
     }
 
@@ -412,7 +468,7 @@ public class PlayActivity extends FragmentActivity {
         // If exists and it's new
         if (word != null) {
             Log.d("wordSelected", confirmedWordString + " exists!");
-            BUS.post(new WordSelectedEvent(word, true, currentPageWordsAvailable.contains(word)));
+            BUS.post(new WordSelectedEvent(word, true, currentPageInfo.getWordsAvailable().contains(word)));
         } else {
             Log.d("wordSelected", confirmedWordString + " does not exists!");
             BUS.post(new WordSelectedEvent(word, false, false));
@@ -427,17 +483,16 @@ public class PlayActivity extends FragmentActivity {
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
             // Save Stats
-            WordStat wordStat = new WordStat(new Date(), selectedWord.getLemma(), currentPageNum, null);
+            WordStat wordStat = new WordStat(new Date(), selectedWord.getLemma(), currentPageInfo.getNumber(), null);
             wordStats.add(wordStat);
             // Play correct sound
             soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
             // Update number of words to found
-            currentPageWordsToFindNum--;
-            currentPageWordsAvailable.remove(selectedWord);
+            currentPageInfo.wordFound(selectedWord);
             // Pronounce the word
             // Check if page is completed
-            if (currentPageWordsToFindNum == 0) {
-                BUS.post(new PageCompletedEvent(currentPageNum));
+            if (currentPageInfo.allWordsFound()) {
+                BUS.post(new PageCompletedEvent(currentPageInfo.getNumber()));
             }
         } else if (wordSelectedEvent.isCorrect() && !wordSelectedEvent.isNew()) {
             soundPool.play(sameSound, 1f, 1f, 0, 0, 1f);
@@ -450,6 +505,7 @@ public class PlayActivity extends FragmentActivity {
      * React to a ExitEvent
      */
     @Subscribe public void Exit(ExitEvent exitEvent) {
+        mBluetoothService.stop();
         finish();
     }
 
@@ -473,10 +529,15 @@ public class PlayActivity extends FragmentActivity {
     @Subscribe public void connectionStateChangeEvent(ConnectionStateChangeEvent connectionStateChangeEvent) {
         switch (connectionStateChangeEvent.getNewState()) {
             case BluetoothService.STATE_CONNECTED:
-                if(null != mConnectedDeviceName) {
+                if (null != mConnectedDeviceName) {
                     connTextView.setText("(" + String.valueOf(masterRole) + ") " + getString(R.string.bluetooth_connected) + " a " + mConnectedDeviceName);
-                }else{
+                } else {
                     connTextView.setText(R.string.bluetooth_connected);
+                }
+
+                // If it is master initialize the game, if it is slave do nothing and wait
+                if (masterRole) {
+                    startGame();
                 }
                 break;
             case BluetoothService.STATE_CONNECTING:
@@ -511,6 +572,24 @@ public class PlayActivity extends FragmentActivity {
      * React to a MessageWriteEvent
      */
     @Subscribe public void messageReadEvent(MessageReadEvent messageReadEvent) {
+        byte[] readBuf = (byte[]) messageReadEvent.getBuffer();
+        // construct a string from the valid bytes in the buffer
+        String readMessage = new String(readBuf, 0, messageReadEvent.getBytes());
+
+        // New page info from the master
+        if (readMessage.startsWith(BluetoothMessageHeader.PAGE_INFO) && !masterRole) {
+            String pageInfoJson = readMessage.replace(BluetoothMessageHeader.PAGE_INFO, "");
+            PageInfo pageInfo = gson.fromJson(pageInfoJson, PageInfo.class);
+            nextPage(pageInfo);
+        }
+
+        // New page info from the master
+        if (readMessage.startsWith(BluetoothMessageHeader.PAGE_INFO) && !masterRole) {
+            String pageInfoJson = readMessage.replace(BluetoothMessageHeader.PAGE_INFO, "");
+            PageInfo pageInfo = gson.fromJson(pageInfoJson, PageInfo.class);
+            nextPage(pageInfo);
+        }
+
     }
 
     /**
@@ -683,37 +762,24 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
+    /**
+     * Sends a message.
+     *
+     * @param message A string of text to send.
+     */
+    private void sendMessage(String message) {
+        // Check that we're actually connected before trying anything
+        if (mBluetoothService.getState() != BluetoothService.STATE_CONNECTED) {
+            Toast.makeText(this, R.string.error_connection_msg, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-    private void showMultiPlayerDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        newGameAlertDialog = builder.setTitle(getString(R.string.new_game_multi_dialog_title))
-                .setMessage(getString(R.string.new_game_multi_message))
-                .setPositiveButton(getString(R.string.new_game_multi), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                        showDeviceListActivity();
-                        masterRole = true;
-                    }
-                })
-                .setNeutralButton(getString(R.string.button_discoverable), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                    }
-                })
-                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                        mActivity.finish();
-                        dialog.dismiss();
-                    }
-                })
-                .setCancelable(false)
-                .create();
-
-        newGameAlertDialog.show();
-        // Prevent the dialog to close on click
-        newGameAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                ensureDiscoverable();
-            }
-        });
+        // Check that there's actually something to send
+        if (message.length() > 0) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes();
+            mBluetoothService.write(send);
+        }
     }
 
     /**
