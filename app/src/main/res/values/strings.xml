@@ -56,6 +56,7 @@
     <string name="bluetooth_connected">Connesso</string>
     <string name="error_connection_msg">Impossibile connettersi al dispositivo</string>
     <string name="lost_connection_msg">Connessione persa</string>
+    <string name="wait_turn">Aspetta il tuo turno!</string>
 
 
 </resources>
