@@ -57,6 +57,7 @@
         android:layout_height="@dimen/small_button_dimen"
         android:layout_alignParentTop="true"
         android:layout_margin="@dimen/small_button_margin"
+        android:layout_alignParentLeft="true"
         android:src="@drawable/settings_selector"/>
 
 
@@ -66,6 +67,7 @@
         android:layout_height="@dimen/small_button_dimen"
         android:layout_margin="@dimen/small_button_margin"
         android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
         android:src="@drawable/logo_black"/>
 
 </RelativeLayout>
