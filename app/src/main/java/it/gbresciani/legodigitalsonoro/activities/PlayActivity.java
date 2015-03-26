@@ -24,12 +24,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.orhanobut.logger.Logger;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import butterknife.ButterKnife;
@@ -41,17 +41,17 @@ import it.gbresciani.legodigitalsonoro.events.ExitEvent;
 import it.gbresciani.legodigitalsonoro.events.MessageReadEvent;
 import it.gbresciani.legodigitalsonoro.events.MessageWriteEvent;
 import it.gbresciani.legodigitalsonoro.events.NextPageEvent;
-import it.gbresciani.legodigitalsonoro.events.OtherFoundWordEvent;
 import it.gbresciani.legodigitalsonoro.events.PageCompletedEvent;
 import it.gbresciani.legodigitalsonoro.events.RepeatEvent;
+import it.gbresciani.legodigitalsonoro.events.StateUpdatedEvent;
 import it.gbresciani.legodigitalsonoro.events.SyllableSelectedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
-import it.gbresciani.legodigitalsonoro.events.WordConfirmedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordDismissedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.fragments.EndGameDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.PageCompletedFragment;
 import it.gbresciani.legodigitalsonoro.fragments.SyllablesFragment;
+import it.gbresciani.legodigitalsonoro.fragments.WaitDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordConfirmDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordsFragment;
 import it.gbresciani.legodigitalsonoro.helper.BluetoothMessageHeader;
@@ -126,7 +126,7 @@ public class PlayActivity extends FragmentActivity {
     @InjectView(R.id.game_loading_progress_bar) ProgressBar progressBar;
     private PlayActivity mActivity;
     private AlertDialog newGameAlertDialog;
-    private AlertDialog waitDialog;
+    private WaitDialogFragment waitDialog;
     private EndGameDialogFragment ed;
 
 
@@ -137,6 +137,7 @@ public class PlayActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+        Logger.init("PlayActivity").hideThreadInfo();
         BUS = BusProvider.getInstance();
         timeoutHandler = new Handler();
         ButterKnife.inject(this);
@@ -291,7 +292,7 @@ public class PlayActivity extends FragmentActivity {
             newGameState.setPageNumber(1);
         } else {
             newGameState = currentGameState;
-            newGameState.nextPageNumber();
+            newGameState.nextPage();
         }
 
 
@@ -318,6 +319,8 @@ public class PlayActivity extends FragmentActivity {
         // If in multi send the state to the SLAVE
         if (multi && isMaster()) {
             sendAndUpdateState(currentGameState);
+        } else {
+            updateState(currentGameState);
         }
 
         progressBar.setVisibility(View.INVISIBLE);
@@ -381,37 +384,38 @@ public class PlayActivity extends FragmentActivity {
         updateState(gameState);
     }
 
+    public GameState getGameState() {
+        return currentGameState;
+    }
+
     private void updateState(GameState gameState) {
+        Logger.json(role + " -> updateState: currentGameState", gson.toJson(currentGameState, GameState.class));
+        Logger.json(role + " -> updateState: gameState", gson.toJson(gameState, GameState.class));
+
         //If there is no currentGameState or the page number in the new state is different from the current start a new page with the new state
         if (currentGameState == null || currentGameState.getPageNumber() != gameState.getPageNumber()) {
             startPage(gameState);
         }
-        //Show dialog if it is not my turn
-        showWaitDialog(!role.equals(gameState.getCurrentPlayer()));
-
-        if(!isMaster()){
-            for (Word word: getNewWordInState(gameState)){
-                BUS.post(new OtherFoundWordEvent(word));
+        // Check if page is completed
+        if (gameState.allWordsFound()) {
+            if (multi) {
+                // If MASTER found last word keep the control
+                gameState.setCurrentPlayer(MASTER);
+                if (isMaster()) {
+                    BUS.post(new PageCompletedEvent(gameState.getPageNumber()));
+                }
+            } else {
+                BUS.post(new PageCompletedEvent(gameState.getPageNumber()));
             }
         }
-
-        // Set the new gameState as current
-        currentGameState = gameState;
-    }
-
-    /**
-     * Compare a new state and return the Words found
-     * @param gameState
-     * @return
-     */
-    private ArrayList<Word> getNewWordInState(GameState gameState) {
-        ArrayList<Word> currentTemp = new ArrayList<>(currentGameState.getWordsAvailable());
-        ArrayList<Word> newTemp = new ArrayList<>(gameState.getWordsAvailable());
-
-        if (currentTemp.removeAll(newTemp)) {
-            return currentTemp;
+        //Show dialog if it is not my turn
+        if (multi) {
+            showWaitDialog(!role.equals(gameState.getCurrentPlayer()));
         }
-        return new ArrayList<Word>();
+
+        BUS.post(new StateUpdatedEvent(gameState, currentGameState));
+        // Set the new gameState as current
+        currentGameState = new GameState(gameState);
     }
 
     /**
@@ -476,9 +480,13 @@ public class PlayActivity extends FragmentActivity {
             waitDialog.dismiss();
         }
         if (show) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            waitDialog = builder.setMessage(getString(R.string.wait_turn)).setCancelable(false).create();
-            waitDialog.show();
+            (new Handler()).postDelayed(new Runnable() {
+                @Override public void run() {
+                    FragmentTransaction ft = getFragmentManager().beginTransaction();
+                    waitDialog = WaitDialogFragment.newInstance();
+                    waitDialog.show(ft, "waitDialog");
+                }
+            }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT);
         }
     }
 
@@ -490,18 +498,10 @@ public class PlayActivity extends FragmentActivity {
      * React to a NextPageEvent, opening a new one or ending the game
      */
     @Subscribe public void nextPageEvent(NextPageEvent nextPageEvent) {
-        if (multi) {
-            if (currentGameState.lastPage()) {
-                showEndDialog();
-            } else {
-                startPage(constructPage());
-            }
+        if (currentGameState.lastPage()) {
+            showEndDialog();
         } else {
-            if (currentGameState.lastPage()) {
-                showEndDialog();
-            } else {
-                startPage(constructPage());
-            }
+            startPage(constructPage());
         }
     }
 
@@ -529,24 +529,6 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
-
-    /**
-     * React to a WordConfirmedEvent
-     */
-    @Subscribe public void wordConfirmed(WordConfirmedEvent wordConfirmedEvent) {
-        timeoutHandler.removeCallbacksAndMessages(null);
-        String confirmedWordString = wordConfirmedEvent.getWordConfirmed();
-        Word word = wordByLemma(confirmedWordString);
-        // If exists and it's new
-        if (word != null) {
-            Log.d("wordSelected", confirmedWordString + " exists!");
-            BUS.post(new WordSelectedEvent(word, true, currentGameState.getWordsAvailable().contains(word)));
-        } else {
-            Log.d("wordSelected", confirmedWordString + " does not exists!");
-            BUS.post(new WordSelectedEvent(word, false, false));
-        }
-    }
-
     /**
      * React to a WordSelectedEvent
      */
@@ -559,36 +541,30 @@ public class PlayActivity extends FragmentActivity {
             wordStats.add(wordStat);
             // Play correct sound
             soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
+            // New Game State
+            GameState newGameState = new GameState(currentGameState);
             // Update number of words to found
             if (multi) {
                 // If MASTER update the status and send to the SLAVE
                 if (isMaster()) {
-                    currentGameState.setCurrentPlayer(SLAVE);
-                    currentGameState.wordFound(selectedWord);
-                    // Check if page is completed
-                    if (currentGameState.allWordsFound()) {
-                        BUS.post(new PageCompletedEvent(currentGameState.getPageNumber()));
-                        // If MASTER found last word keep the control
-                        currentGameState.setCurrentPlayer(MASTER);
-                    }
-                    sendAndUpdateState(currentGameState);
+                    newGameState.setCurrentPlayer(SLAVE);
+                    newGameState.wordFound(selectedWord);
+                    sendAndUpdateState(newGameState);
                 } else {
                     sendNewWordFound(selectedWord);
                 }
             } else {
-                currentGameState.wordFound(selectedWord);
-                // Check if page is completed
-                if (currentGameState.allWordsFound()) {
-                    BUS.post(new PageCompletedEvent(currentGameState.getPageNumber()));
-                }
+                newGameState.wordFound(selectedWord);
+                updateState(newGameState);
             }
         } else if (wordSelectedEvent.isCorrect() && !wordSelectedEvent.isNew()) {
             soundPool.play(sameSound, 1f, 1f, 0, 0, 1f);
             if (multi) {
                 // If MASTER change current player and send new state
                 if (isMaster()) {
-                    currentGameState.setCurrentPlayer(SLAVE);
-                    sendAndUpdateState(currentGameState);
+                    GameState newGameState = new GameState(currentGameState);
+                    newGameState.setCurrentPlayer(SLAVE);
+                    sendAndUpdateState(newGameState);
                 } else { // If SLAVE send simple turn pass to MASTER and wait for state change
                     sendSimpleTurnPass();
                 }
@@ -598,8 +574,9 @@ public class PlayActivity extends FragmentActivity {
             if (multi) {
                 // If MASTER change current player and send new state
                 if (isMaster()) {
-                    currentGameState.setCurrentPlayer(SLAVE);
-                    sendAndUpdateState(currentGameState);
+                    GameState newGameState = new GameState(currentGameState);
+                    newGameState.setCurrentPlayer(SLAVE);
+                    sendAndUpdateState(newGameState);
                 } else { // If SLAVE send simple turn pass to MASTER and wait for state change
                     sendSimpleTurnPass();
                 }
@@ -611,19 +588,11 @@ public class PlayActivity extends FragmentActivity {
      * React to a PageCompletedEvent, changing the layout
      */
     @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
-        if (multi) {
-            if (currentGameState.lastPage()) {
-                gameStat.setEndDate(new Date());
-                storeSendStats();
-            }
-            showPageCompleted();
-        } else {
-            if (currentGameState.lastPage()) {
-                gameStat.setEndDate(new Date());
-                storeSendStats();
-            }
-            showPageCompleted();
+        if (currentGameState.lastPage()) {
+            gameStat.setEndDate(new Date());
+            storeSendStats();
         }
+        showPageCompleted();
     }
 
 
@@ -713,8 +682,9 @@ public class PlayActivity extends FragmentActivity {
         if (readMessage.startsWith(BluetoothMessageHeader.SIMPLE_TURN_PASS)) {
             // Only the MASTER should receive this message, change the current player to the MASTER itself and send back to the SLAVE
             if (isMaster()) {
-                currentGameState.setCurrentPlayer(MASTER);
-                sendAndUpdateState(currentGameState);
+                GameState newGameState = new GameState(currentGameState);
+                newGameState.setCurrentPlayer(MASTER);
+                sendAndUpdateState(newGameState);
             }
         }
 
@@ -724,14 +694,10 @@ public class PlayActivity extends FragmentActivity {
             Word wordFound = gson.fromJson(wordFoundJson, Word.class);
             // Only the MASTER should receive this message, update the game state and send back to the SLAVE
             if (isMaster()) {
-                currentGameState.wordFound(wordFound);
-                currentGameState.setCurrentPlayer(MASTER);
-                BUS.post(new OtherFoundWordEvent(wordFound));
-                // Check if page is completed
-                if (currentGameState.allWordsFound()) {
-                    BUS.post(new PageCompletedEvent(currentGameState.getPageNumber()));
-                }
-                sendAndUpdateState(currentGameState);
+                GameState newGameState = new GameState(currentGameState);
+                newGameState.wordFound(wordFound);
+                newGameState.setCurrentPlayer(MASTER);
+                sendAndUpdateState(newGameState);
             }
         }
 
@@ -945,18 +911,4 @@ public class PlayActivity extends FragmentActivity {
         }
     }
 
-    /**
-     * Get a word given its lemma
-     *
-     * @param word The lemma of the word to find.
-     * @return The Word if exists, null if it doesn't
-     */
-    private Word wordByLemma(String word) {
-        List<Word> wordFound = Word.find(Word.class, "lemma = ?", word);
-        if (wordFound.size() > 0) {
-            return wordFound.get(0);
-        } else {
-            return null;
-        }
-    }
 }

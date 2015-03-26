@@ -26,10 +26,10 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.legodigitalsonoro.R;
 import it.gbresciani.legodigitalsonoro.activities.PlayActivity;
-import it.gbresciani.legodigitalsonoro.events.OtherFoundWordEvent;
+import it.gbresciani.legodigitalsonoro.events.StateUpdatedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
-import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
+import it.gbresciani.legodigitalsonoro.helper.GameState;
 import it.gbresciani.legodigitalsonoro.helper.Helper;
 import it.gbresciani.legodigitalsonoro.model.Word;
 
@@ -171,15 +171,12 @@ public class WordsFragment extends Fragment {
         });
     }
 
-    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
-        if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
-            selectWord(wordSelectedEvent.getWord());
+    @Subscribe public void updateStateEvent(StateUpdatedEvent stateUpdatedEvent) {
+        GameState newGameState = stateUpdatedEvent.getNewGameState();
+        GameState oldGameState = stateUpdatedEvent.getOldGameState();
+        for (Word word : Helper.getNewWordInState(newGameState, oldGameState)) {
+            selectWord(word);
         }
-    }
-
-    @Subscribe public void otherFoundWordEvent(OtherFoundWordEvent otherFoundWordEvent) {
-        Word newWord = otherFoundWordEvent.getNewWord();
-        selectWord(newWord);
     }
 
     private void selectWord(Word word) {

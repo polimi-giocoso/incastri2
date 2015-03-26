@@ -12,6 +12,7 @@ public class GameState {
     public final static String PAGE_NUM = "pageNumber";
     public final static String PAGES = "pages";
     public final static String PAGE_WORDS_AVAIL = "pageWordsAvailable";
+    public final static String PAGE_WORDS_FOUND = "pageWordsFound";
     public final static String PAGE_WORDS_TO_FIND_NUM = "pageWordsToFindNum";
     public final static String PAGE_SYLLABLES = "pageSyllables";
     public final static String CURRENT_PLAYER = "currentPlayer";
@@ -28,6 +29,9 @@ public class GameState {
     @SerializedName(PAGE_WORDS_AVAIL)
     private ArrayList<Word> wordsAvailable;
 
+    @SerializedName(PAGE_WORDS_FOUND)
+    private ArrayList<Word> wordsFound = new ArrayList<Word>();
+
     @SerializedName(PAGE_SYLLABLES)
     private ArrayList<Syllable> syllables;
 
@@ -37,24 +41,25 @@ public class GameState {
     public GameState() {
     }
 
-    public GameState(int pageNumber, int pages, int pageWordsToFindNum, ArrayList<Word> wordsAvailable, ArrayList<Syllable> syllables, String currentPlayer) {
+    public GameState(int pageNumber, int pages, int pageWordsToFindNum, ArrayList<Word> wordsAvailable, ArrayList<Word> wordsFound, ArrayList<Syllable> syllables, String currentPlayer) {
         this.pageNumber = pageNumber;
         this.pages = pages;
         this.pageWordsToFindNum = pageWordsToFindNum;
         this.wordsAvailable = wordsAvailable;
+        this.wordsFound = wordsFound;
         this.syllables = syllables;
         this.currentPlayer = currentPlayer;
     }
 
     public GameState(GameState gameState) {
-        this.pageNumber = gameState.getPageNumber();
-        this.pages = gameState.getPages();
-        this.pageWordsToFindNum = gameState.getPageWordsToFindNum();
-        this.wordsAvailable = gameState.getWordsAvailable();
-        this.syllables = gameState.getSyllables();
-        this.currentPlayer = gameState.getCurrentPlayer();
+        this.pageNumber = gameState.pageNumber;
+        this.pages = gameState.pages;
+        this.pageWordsToFindNum = gameState.pageWordsToFindNum;
+        this.wordsAvailable = new ArrayList<>(gameState.wordsAvailable);
+        this.wordsFound = new ArrayList<>(gameState.wordsFound);
+        this.syllables = new ArrayList<>(gameState.syllables);
+        this.currentPlayer = gameState.currentPlayer;
     }
-
 
 
     public int getPageNumber() {
@@ -105,6 +110,14 @@ public class GameState {
         this.currentPlayer = currentPlayer;
     }
 
+    public ArrayList<Word> getWordsFound() {
+        return wordsFound;
+    }
+
+    public void setWordsFound(ArrayList<Word> wordsFound) {
+        this.wordsFound = wordsFound;
+    }
+
     /**
      * Whether all words are found
      *
@@ -116,18 +129,25 @@ public class GameState {
 
     /**
      * Removes word from the available words and decrements the number of words to find
+     *
      * @param word The found word
      */
-    public void wordFound(Word word){
+    public void wordFound(Word word) {
         wordsAvailable.remove(word);
+        wordsFound.add(word);
         this.pageWordsToFindNum--;
     }
 
-    public void nextPageNumber(){
+    /**
+     * Increments the page number and clears the word arrayLists
+     */
+    public void nextPage() {
+        wordsAvailable.clear();
+        wordsFound.clear();
         pageNumber++;
     }
 
-    public boolean lastPage(){
+    public boolean lastPage() {
         return pages == pageNumber;
     }
 
@@ -147,6 +167,8 @@ public class GameState {
             return false;
         if (wordsAvailable != null ? !wordsAvailable.equals(gameState.wordsAvailable) : gameState.wordsAvailable != null)
             return false;
+        if (wordsFound != null ? !wordsFound.equals(gameState.wordsFound) : gameState.wordsFound != null)
+            return false;
 
         return true;
     }
@@ -157,8 +179,11 @@ public class GameState {
         result = 31 * result + pages;
         result = 31 * result + pageWordsToFindNum;
         result = 31 * result + (wordsAvailable != null ? wordsAvailable.hashCode() : 0);
+        result = 31 * result + (wordsFound != null ? wordsFound.hashCode() : 0);
         result = 31 * result + (syllables != null ? syllables.hashCode() : 0);
         result = 31 * result + (currentPlayer != null ? currentPlayer.hashCode() : 0);
         return result;
     }
+
+
 }

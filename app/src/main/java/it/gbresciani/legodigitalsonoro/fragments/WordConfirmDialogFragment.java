@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.util.Property;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,21 +30,25 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
 import it.gbresciani.legodigitalsonoro.R;
-import it.gbresciani.legodigitalsonoro.events.WordConfirmedEvent;
+import it.gbresciani.legodigitalsonoro.activities.PlayActivity;
 import it.gbresciani.legodigitalsonoro.events.WordDismissedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
+import it.gbresciani.legodigitalsonoro.helper.Helper;
+import it.gbresciani.legodigitalsonoro.model.Word;
 
 
 public class WordConfirmDialogFragment extends DialogFragment {
-    private static final String ARG_PARAM1 = "word";
+    private static final String ARG_PARAM1 = "wordLemma";
     public static final int WORD_DIALOG_TIMEOUT = 1000;
 
-    private String word;
+    private String wordLemma;
     @InjectView(R.id.word_textview) TextView wordTextView;
     @InjectView(R.id.confirm_dialog_layout) RelativeLayout confirmDialogLayout;
     @InjectView(R.id.ok_button) ImageButton okButton;
     @InjectView(R.id.no_button) ImageButton noButton;
+
+    private PlayActivity playActivity;
 
     private Bus BUS;
 
@@ -71,8 +76,9 @@ public class WordConfirmDialogFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         BUS = BusProvider.getInstance();
+        playActivity = (PlayActivity) getActivity();
         if (getArguments() != null) {
-            word = getArguments().getString(ARG_PARAM1);
+            wordLemma = getArguments().getString(ARG_PARAM1);
         }
         int style = DialogFragment.STYLE_NO_TITLE, theme = 0;
         setStyle(style, theme);
@@ -97,7 +103,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
         View v = inflater.inflate(R.layout.fragment_word_confirm_dialog, container, false);
         ButterKnife.inject(this, v);
 
-        wordTextView.setText(word);
+        wordTextView.setText(wordLemma);
 
         return v;
     }
@@ -119,7 +125,16 @@ public class WordConfirmDialogFragment extends DialogFragment {
 
     @OnClick(R.id.ok_button)
     public void ok() {
-        BUS.post(new WordConfirmedEvent(word));
+
+        Word word = Helper.wordByLemma(wordLemma);
+        if (word != null) {
+            Log.d("wordSelected", wordLemma + " exists!");
+            BUS.post(new WordSelectedEvent(word, true, playActivity.getGameState().getWordsAvailable().contains(word)));
+        } else {
+            Log.d("wordSelected", wordLemma + " does not exists!");
+            BUS.post(new WordSelectedEvent(word, false, false));
+        }
+
         //Prevent other click
         okButton.setClickable(false);
         noButton.setClickable(false);
@@ -163,16 +178,6 @@ public class WordConfirmDialogFragment extends DialogFragment {
         scaleAnimation.setFillAfter(true);
         scaleAnimation.setDuration(100);
 
-        if (wordSelectedEvent.isCorrect()) {
-            if (wordSelectedEvent.isNew()) {
-
-            } else {
-                // Skip color animation
-                dismiss();
-                return;
-            }
-        } else {
-        }
 
         Drawable noBackgrounds[] = new Drawable[2];
         Drawable okBackgrounds[] = new Drawable[2];
@@ -196,7 +201,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
                     @Override public void run() {
                         dismiss();
                     }
-                }, WORD_DIALOG_TIMEOUT);
+                }, WORD_DIALOG_TIMEOUT + 100);
             }
 
             @Override public void onAnimationRepeat(Animation animation) {
@@ -210,7 +215,11 @@ public class WordConfirmDialogFragment extends DialogFragment {
                 animator.start();
             } else {
                 // Skip color animation
-                dismiss();
+                (new Handler()).postDelayed(new Runnable() {
+                    @Override public void run() {
+                        dismiss();
+                    }
+                }, WORD_DIALOG_TIMEOUT);
                 return;
             }
         } else {
