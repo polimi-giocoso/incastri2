@@ -257,7 +257,7 @@ public class PlayActivity extends FragmentActivity {
 
 
     /**
-     * Start the game
+     * Start the game creating the statistics object
      */
     private void startGame() {
         gameStat = new GameStat();
@@ -266,7 +266,7 @@ public class PlayActivity extends FragmentActivity {
     }
 
     /**
-     * Restart the game
+     * Restart the game resetting the statistics objects
      */
     private void restartGame() {
         gameStat = new GameStat();
@@ -279,14 +279,14 @@ public class PlayActivity extends FragmentActivity {
     }
 
     /**
-     * Construct all the parameters need by a page new page
-     * In multi it should only called by MASTER
+     * Construct all the parameters needed by a new page
+     * In multiplayer it should only called by MASTER
      */
     private GameState constructPage() {
 
         GameState newGameState;
 
-        // First page in the game
+        // If first page in the game -> create new game state and set page number to 1
         if (currentGameState == null) {
             newGameState = new GameState();
             newGameState.setPageNumber(1);
@@ -295,13 +295,13 @@ public class PlayActivity extends FragmentActivity {
             newGameState.nextPage();
         }
 
-
         newGameState.setPages(noPages);
 
         // Determine words and syllables for the page
         newGameState.setSyllables(Helper.chooseSyllables(noSyllables));
         newGameState.setWordsAvailable(Helper.permuteSyllablesInWords(newGameState.getSyllables(), 2));
         newGameState.setPageWordsToFindNum(newGameState.getWordsAvailable().size() <= 4 ? newGameState.getWordsAvailable().size() : 4);
+
         // If in multi the current player is also set to SLAVE
         if (multi) {
             newGameState.setCurrentPlayer(SLAVE);
@@ -310,7 +310,7 @@ public class PlayActivity extends FragmentActivity {
     }
 
     /**
-     * Initialize a page, adding the two fragments and passing them the calculated syllables and words
+     * Initialize a page, adding the two fragments and passing them the calculated syllables and words in gameState
      */
     private void startPage(GameState gameState) {
 
