@@ -182,6 +182,48 @@ public class Helper {
         return inSampleSize;
     }
 
+    /**
+     * Compare a state1 and state2 and return Words that are in state
+     *
+     * @param newState
+     * @param oldState
+     * @return ArrayList of new words
+     */
+    public static ArrayList<Word> getNewWordInState(GameState newState, GameState oldState) {
+        ArrayList<Word> newWordsAvail = new ArrayList<>(newState.getWordsAvailable());
+        ArrayList<Word> oldWordsAvail = new ArrayList<>(oldState.getWordsAvailable());
+
+        oldWordsAvail.removeAll(newWordsAvail);
+
+        return oldWordsAvail;
+    }
+
+
+    /**
+     * Get a word given its lemma
+     *
+     * @param word The lemma of the word to find.
+     * @return The Word if exists, null if it doesn't
+     */
+    public static Word wordByLemma(String word) {
+        List<Word> wordFound = Word.find(Word.class, "lemma = ?", word);
+        if (wordFound.size() > 0) {
+            return wordFound.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Return if a Word exists, given a lemma
+     *
+     * @param word The lemma of the word to find.
+     * @return The Word if exists, null if it doesn't
+     */
+    public static boolean wordExistsByLemma(String word) {
+        List<Word> wordFound = Word.find(Word.class, "lemma = ?", word);
+        return wordFound.size() > 0;
+    }
 
     /**
      * Validate a string as an email

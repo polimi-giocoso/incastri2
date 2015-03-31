@@ -66,6 +66,14 @@ public class MainActivity extends FragmentActivity {
     @OnClick(R.id.play_button)
     public void startPlayActivity() {
         Intent playActivityIntent = new Intent(this, PlayActivity.class);
+        playActivityIntent.setAction(PlayActivity.MODE_SINGLE_PLAYER);
+        startActivity(playActivityIntent);
+    }
+
+    @OnClick(R.id.play_multi_button)
+    public void startMultiPlayer() {
+        Intent playActivityIntent = new Intent(this, PlayActivity.class);
+        playActivityIntent.setAction(PlayActivity.MODE_MULTI_PLAYER);
         startActivity(playActivityIntent);
     }
 
@@ -75,16 +83,16 @@ public class MainActivity extends FragmentActivity {
         startActivity(playActivityIntent);
     }
 
-    private void checkDB(){
+    private void checkDB() {
         BUS.post(new ProgressChangeEvent(0));
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(!prefs.getBoolean("firstTime", false)) {
+        if (!prefs.getBoolean("firstTime", false)) {
             Intent initDBIntent = new Intent(this, InitDBService.class);
             startService(initDBIntent);
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean("firstTime", true);
             editor.commit();
-        }else{
+        } else {
             BUS.post(new ProgressChangeEvent(100));
         }
     }
@@ -95,5 +103,4 @@ public class MainActivity extends FragmentActivity {
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
     }
-
 }

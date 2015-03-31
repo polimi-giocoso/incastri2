@@ -36,6 +36,27 @@
     <string name="exit_dialog_message">Se esci tutti i progressi andranno persi!</string>
     <string name="exit_dialog_title">Termina partita</string>
     <string name="settings_text">Settings</string>
+    <string name="title_other_devices">Altri Dispositivi</string>
+    <string name="title_paired_devices">Dispositivi accoppiati</string>
+    <string name="none_paired">Nessun dispositivo è stato accoppiato</string>
+    <string name="scanning">Ricerca...</string>
+    <string name="none_found">Nessun dispositivo trovato</string>
+    <string name="select_device">Scegliere un dispositivo</string>
+    <string name="bt_not_enabled">Il Bluetooth non è stato abilitato</string>
+    <string name="new_game_multi">Inizia una partita</string>
+    <string name="join_game_multi">Unisciti a una partita</string>
+    <string name="button_scan">Cerca dispositivi</string>
+    <string name="button_discoverable">Rendi visualizzabile</string>
+    <string name="new_game_multi_dialog_title">Nuova partita multigiocatore</string>
+    <string name="new_game_multi_message">Inizia una nuova partita o aspetta che sia qualcun altro a farlo!</string>
+    <string name="cancel">Annulla</string>
+    <string name="bluetooth_conn_def">Non connesso</string>
+    <string name="bluetooth_listening">In ascolto</string>
+    <string name="bluetooth_connecting">Connessione in corso...</string>
+    <string name="bluetooth_connected">Connesso</string>
+    <string name="error_connection_msg">Impossibile connettersi al dispositivo</string>
+    <string name="lost_connection_msg">Connessione persa</string>
+    <string name="wait_turn">Aspetta il tuo turno!</string>
 
 
 </resources>

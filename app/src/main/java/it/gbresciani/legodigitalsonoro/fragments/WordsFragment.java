@@ -26,9 +26,10 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import it.gbresciani.legodigitalsonoro.R;
 import it.gbresciani.legodigitalsonoro.activities.PlayActivity;
+import it.gbresciani.legodigitalsonoro.events.StateUpdatedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
-import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
+import it.gbresciani.legodigitalsonoro.helper.GameState;
 import it.gbresciani.legodigitalsonoro.helper.Helper;
 import it.gbresciani.legodigitalsonoro.model.Word;
 
@@ -124,7 +125,7 @@ public class WordsFragment extends Fragment {
                 // by the number of slots to be drawn minus two margins
                 try {
                     slotDimen = Math.min(width, (height / wordsToFind));
-                }catch (ArithmeticException ae){
+                } catch (ArithmeticException ae) {
                     Log.e("wordsToFind: ", String.valueOf(wordsToFind));
                     slotDimen = 0;
                 }
@@ -170,8 +171,16 @@ public class WordsFragment extends Fragment {
         });
     }
 
-    @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
-        if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
+    @Subscribe public void updateStateEvent(StateUpdatedEvent stateUpdatedEvent) {
+        GameState newGameState = stateUpdatedEvent.getNewGameState();
+        GameState oldGameState = stateUpdatedEvent.getOldGameState();
+        for (Word word : Helper.getNewWordInState(newGameState, oldGameState)) {
+            selectWord(word);
+        }
+    }
+
+    private void selectWord(Word word) {
+        if (availableSlots.size() > 0) {
             // Move slot to the used ones
             ImageView slot = availableSlots.get(0);
             ImageView flag = wordFlags.get(0);
@@ -181,7 +190,6 @@ public class WordsFragment extends Fragment {
             wordFlags.remove(0);
 
             // Move word to the found ones
-            Word word = wordSelectedEvent.getWord();
             foundWords.add(word);
             availableWords.remove(word);
 
@@ -203,7 +211,7 @@ public class WordsFragment extends Fragment {
             });
 
             flag.setVisibility(View.VISIBLE);
-            slot.setImageBitmap(loadWordBitmap(word, slot.getWidth(),slot.getHeight()));
+            slot.setImageBitmap(loadWordBitmap(word, slot.getWidth(), slot.getHeight()));
         }
     }
 

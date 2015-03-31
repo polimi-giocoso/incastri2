@@ -7,10 +7,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 
 import com.squareup.otto.Bus;
 
 import butterknife.ButterKnife;
+import butterknife.InjectView;
 import butterknife.OnClick;
 import it.gbresciani.legodigitalsonoro.R;
 import it.gbresciani.legodigitalsonoro.events.ExitEvent;
@@ -20,8 +22,14 @@ import it.gbresciani.legodigitalsonoro.helper.BusProvider;
 
 public class EndGameDialogFragment extends DialogFragment {
 
+    private static final String PASSIVE = "passive";
+
+    private boolean passive = false;
 
     private Bus BUS;
+
+    @InjectView(R.id.repeat_button_dialog) ImageButton repeatButton;
+    @InjectView(R.id.exit_button_dialog) ImageButton exitButton;
 
     /**
      * Use this factory method to create a new instance of
@@ -30,8 +38,11 @@ public class EndGameDialogFragment extends DialogFragment {
      * @return A new instance of fragment WordConfirmDialogFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static EndGameDialogFragment newInstance() {
+    public static EndGameDialogFragment newInstance(boolean passive) {
         EndGameDialogFragment fragment = new EndGameDialogFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(PASSIVE, passive);
+        fragment.setArguments(args);
         return fragment;
     }
 
@@ -43,6 +54,9 @@ public class EndGameDialogFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         BUS = BusProvider.getInstance();
+        if (getArguments() != null) {
+            passive = getArguments().getBoolean(PASSIVE);
+        }
         int style = DialogFragment.STYLE_NO_TITLE, theme = 0;
         setStyle(style, theme);
     }
@@ -64,6 +78,10 @@ public class EndGameDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_end_game_dialog, container, false);
         ButterKnife.inject(this, v);
+        if(passive){
+            exitButton.setVisibility(View.GONE);
+            repeatButton.setVisibility(View.GONE);
+        }
 
         return v;
     }

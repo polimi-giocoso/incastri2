@@ -1,7 +1,12 @@
 package it.gbresciani.legodigitalsonoro.activities;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -13,38 +18,51 @@ import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.orhanobut.logger.Logger;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import butterknife.ButterKnife;
+import butterknife.InjectView;
 import it.gbresciani.legodigitalsonoro.R;
+import it.gbresciani.legodigitalsonoro.events.ConnectedDeviceNameEvent;
+import it.gbresciani.legodigitalsonoro.events.ConnectionStateChangeEvent;
 import it.gbresciani.legodigitalsonoro.events.ExitEvent;
+import it.gbresciani.legodigitalsonoro.events.MessageReadEvent;
+import it.gbresciani.legodigitalsonoro.events.MessageWriteEvent;
 import it.gbresciani.legodigitalsonoro.events.NextPageEvent;
 import it.gbresciani.legodigitalsonoro.events.PageCompletedEvent;
 import it.gbresciani.legodigitalsonoro.events.RepeatEvent;
+import it.gbresciani.legodigitalsonoro.events.StateUpdatedEvent;
 import it.gbresciani.legodigitalsonoro.events.SyllableSelectedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
-import it.gbresciani.legodigitalsonoro.events.WordConfirmedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordDismissedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.fragments.EndGameDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.PageCompletedFragment;
 import it.gbresciani.legodigitalsonoro.fragments.SyllablesFragment;
+import it.gbresciani.legodigitalsonoro.fragments.WaitDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordConfirmDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordsFragment;
+import it.gbresciani.legodigitalsonoro.helper.BluetoothMessageHeader;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
+import it.gbresciani.legodigitalsonoro.helper.GameState;
 import it.gbresciani.legodigitalsonoro.helper.Helper;
 import it.gbresciani.legodigitalsonoro.model.GameStat;
 import it.gbresciani.legodigitalsonoro.model.Syllable;
 import it.gbresciani.legodigitalsonoro.model.Word;
 import it.gbresciani.legodigitalsonoro.model.WordStat;
+import it.gbresciani.legodigitalsonoro.services.BluetoothService;
 import it.gbresciani.legodigitalsonoro.services.GenericIntentService;
 
 
@@ -53,21 +71,37 @@ import it.gbresciani.legodigitalsonoro.services.GenericIntentService;
  */
 public class PlayActivity extends FragmentActivity {
 
+    private static final String TAG = "PlayActivity";
+
+    public static final String MODE_SINGLE_PLAYER = "mode_single_player";
+    public static final String MODE_MULTI_PLAYER = "mode_multi_player";
+
+    public static final String MASTER = "master";
+    public static final String SLAVE = "slave";
+
+    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_TTS_CHECK = 3;
+
     // Pref
     private int noPages;
     private int noSyllables;
 
     // Game Page state variables
-    private int currentPageWordsToFindNum;
-    private ArrayList<Word> currentPageWordsAvailable;
-    private int currentPageNum = 0;
     private String syllableYetSelected = "";
     private int backPressedCount = 0;
+    private GameState currentGameState = null;
+
+    // Multi
+    private boolean multi;
+    private String role = SLAVE;
 
     // Helpers
     private Handler timeoutHandler;
+    private Handler timeoutTurnHandler;
     private Bus BUS;
     private SoundPool soundPool;
+    private Gson gson;
 
     // Sounds
     private int correctSound;
@@ -77,11 +111,23 @@ public class PlayActivity extends FragmentActivity {
     // TTS
     private TextToSpeech mTTS;
     private boolean ttsConfigured = false;
-    private int TTS_CHECK_ITA = 0;
 
     // Stats
     private GameStat gameStat;
     private ArrayList<WordStat> wordStats = new ArrayList<>();
+
+    // Bluetooth
+    private BluetoothAdapter mBluetoothAdapter = null;
+    private BluetoothService mBluetoothService = null;
+    private String mConnectedDeviceName;
+
+    // UI
+    @InjectView(R.id.connection_text_view) TextView connTextView;
+    @InjectView(R.id.game_loading_progress_bar) ProgressBar progressBar;
+    private PlayActivity mActivity;
+    private AlertDialog newGameAlertDialog;
+    private WaitDialogFragment waitDialog;
+    private EndGameDialogFragment ed;
 
 
     /* ----------------------------- Activity Lifecycle Methods ----------------------------- */
@@ -91,21 +137,55 @@ public class PlayActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+        Logger.init("PlayActivity").hideThreadInfo();
         BUS = BusProvider.getInstance();
         timeoutHandler = new Handler();
         ButterKnife.inject(this);
+        gson = new Gson();
+
+        mActivity = this;
 
         loadPref();
         loadSound();
         checkTTS();
 
-        startGame();
+        // Single or Multi player (default single)
+        Intent playIntent = getIntent();
+        String action = playIntent.getAction();
+        switch (action) {
+            case MODE_SINGLE_PLAYER:
+                multi = false;
+                startGame();
+                break;
+            case MODE_MULTI_PLAYER:
+                multi = true;
+                // If Bluetooth is supported and enabled show dialog
+                if (initBluetooth() && enableBluetooth()) {
+                    setupMultiPlayer();
+                }
+                break;
+            default:
+                multi = false;
+                startGame();
+                break;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         BUS.register(this);
+
+        // Performing this check in onResume() covers the case in which BT was
+        // not enabled during onStart(), so we were paused to enable it...
+        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+        if (mBluetoothService != null) {
+            // Only if the state is STATE_NONE, do we know that we haven't started already
+            if (mBluetoothService.getState() == BluetoothService.STATE_NONE) {
+                // Start the Bluetooth chat services
+                mBluetoothService.start();
+            }
+        }
     }
 
     @Override
@@ -119,6 +199,9 @@ public class PlayActivity extends FragmentActivity {
             mTTS.stop();
             mTTS.shutdown();
         }
+        if (mBluetoothService != null) {
+            mBluetoothService.stop();
+        }
         super.onDestroy();
     }
 
@@ -129,50 +212,124 @@ public class PlayActivity extends FragmentActivity {
         backPressedCount++;
     }
 
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CONNECT_DEVICE_SECURE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    connectDevice(data);
+                }
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    finish();
+                }
+                break;
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, show dialog and start the service
+                    setupMultiPlayer();
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    Log.d(TAG, "Bluetooth not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled,
+                            Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            case REQUEST_TTS_CHECK:
+                if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                    mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                        @Override public void onInit(int status) {
+                            ttsConfigured = true;
+                            mTTS.setLanguage(Locale.ITALIAN);
+                        }
+                    });
+                } else {
+                    Intent installTTSIntent = new Intent();
+                    installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                    startActivity(installTTSIntent);
+                }
+        }
+    }
+
 
     /* ----------------------------- Game Flow Methods ----------------------------- */
 
 
     /**
-     * Start the game
+     * Start the game creating the statistics object
      */
     private void startGame() {
         gameStat = new GameStat();
         gameStat.setStartDate(new Date());
-        nextPage();
+        startPage(constructPage());
     }
 
     /**
-     * Restart the game
+     * Restart the game resetting the statistics objects
      */
     private void restartGame() {
         gameStat = new GameStat();
         wordStats = new ArrayList<>();
         gameStat.setStartDate(new Date());
-        currentPageNum = 0;
+        currentGameState = null;
         syllableYetSelected = "";
         backPressedCount = 0;
-        nextPage();
+        startPage(constructPage());
     }
 
     /**
-     * Initialize a page, adding the two fragments and passing them the calculated syllables and words
+     * Construct all the parameters needed by a new page
+     * In multiplayer it should only called by MASTER
      */
-    private void nextPage() {
+    private GameState constructPage() {
 
-        currentPageNum++;
+        GameState newGameState;
+
+        // If first page in the game -> create new game state and set page number to 1
+        if (currentGameState == null) {
+            newGameState = new GameState();
+            newGameState.setPageNumber(1);
+        } else {
+            newGameState = currentGameState;
+            newGameState.nextPage();
+        }
+
+        newGameState.setPages(noPages);
 
         // Determine words and syllables for the page
-        ArrayList<Syllable> syllables = Helper.chooseSyllables(noSyllables);
-        currentPageWordsAvailable = Helper.permuteSyllablesInWords(syllables, 2);
+        newGameState.setSyllables(Helper.chooseSyllables(noSyllables));
+        newGameState.setWordsAvailable(Helper.permuteSyllablesInWords(newGameState.getSyllables(), 2));
+        newGameState.setPageWordsToFindNum(newGameState.getWordsAvailable().size() <= 4 ? newGameState.getWordsAvailable().size() : 4);
 
-        currentPageWordsToFindNum = currentPageWordsAvailable.size() <= 4 ? currentPageWordsAvailable.size() : 4;
+        // If in multi the current player is also set to SLAVE
+        if (multi) {
+            newGameState.setCurrentPlayer(SLAVE);
+        }
+        return newGameState;
+    }
+
+    /**
+     * Initialize a page, adding the two fragments and passing them the calculated syllables and words in gameState
+     */
+    private void startPage(GameState gameState) {
+
+        currentGameState = gameState;
+
+        // If in multi send the state to the SLAVE
+        if (multi && isMaster()) {
+            sendAndUpdateState(currentGameState);
+        } else {
+            updateState(currentGameState);
+        }
+
+        progressBar.setVisibility(View.INVISIBLE);
 
         FragmentManager fm = getFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        WordsFragment wordsFragment = WordsFragment.newInstance(currentPageWordsAvailable);
-        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(syllables);
+        WordsFragment wordsFragment = WordsFragment.newInstance(gameState.getWordsAvailable());
+        SyllablesFragment syllablesFragment = SyllablesFragment.newInstance(gameState.getSyllables());
 
         ft.replace(R.id.words_frame_layout, wordsFragment);
         ft.replace(R.id.syllables_frame_layout, syllablesFragment);
@@ -205,6 +362,63 @@ public class PlayActivity extends FragmentActivity {
     }
 
     /**
+     * Make connection text view visible and start all Multi Player process before starting the game
+     */
+    private void setupMultiPlayer() {
+        connTextView.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
+        startBluetoothService();
+        showMultiPlayerDialog();
+    }
+
+    private void sendSimpleTurnPass() {
+        sendMessage(BluetoothMessageHeader.SIMPLE_TURN_PASS);
+    }
+
+    private void sendNewWordFound(Word word) {
+        sendMessage(BluetoothMessageHeader.WORD_FOUND + gson.toJson(word, Word.class));
+    }
+
+    private void sendAndUpdateState(GameState gameState) {
+        sendMessage(BluetoothMessageHeader.GAME_STATE + gson.toJson(gameState, GameState.class));
+        updateState(gameState);
+    }
+
+    public GameState getGameState() {
+        return currentGameState;
+    }
+
+    private void updateState(GameState gameState) {
+        Logger.json(role + " -> updateState: currentGameState", gson.toJson(currentGameState, GameState.class));
+        Logger.json(role + " -> updateState: gameState", gson.toJson(gameState, GameState.class));
+
+        //If there is no currentGameState or the page number in the new state is different from the current start a new page with the new state
+        if (currentGameState == null || currentGameState.getPageNumber() != gameState.getPageNumber()) {
+            startPage(gameState);
+        }
+        // Check if page is completed
+        if (gameState.allWordsFound()) {
+            if (multi) {
+                // If MASTER found last word keep the control
+                gameState.setCurrentPlayer(MASTER);
+                if (isMaster()) {
+                    BUS.post(new PageCompletedEvent(gameState.getPageNumber()));
+                }
+            } else {
+                BUS.post(new PageCompletedEvent(gameState.getPageNumber()));
+            }
+        }
+        //Show dialog if it is not my turn
+        if (multi) {
+            showWaitDialog(!role.equals(gameState.getCurrentPlayer()));
+        }
+
+        BUS.post(new StateUpdatedEvent(gameState, currentGameState));
+        // Set the new gameState as current
+        currentGameState = new GameState(gameState);
+    }
+
+    /**
      * Show the dialog to confirm a word
      *
      * @param word the selected word
@@ -221,9 +435,59 @@ public class PlayActivity extends FragmentActivity {
      */
     private void showEndDialog() {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-        EndGameDialogFragment ed = EndGameDialogFragment.newInstance();
-
+        if (multi && !isMaster()) {
+            ed = EndGameDialogFragment.newInstance(true);
+        } else {
+            ed = EndGameDialogFragment.newInstance(false);
+        }
         ed.show(ft, "endDialog");
+    }
+
+    private void showMultiPlayerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        newGameAlertDialog = builder.setTitle(getString(R.string.new_game_multi_dialog_title))
+                .setMessage(getString(R.string.new_game_multi_message))
+                .setPositiveButton(getString(R.string.new_game_multi), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        showDeviceListActivity();
+                        role = MASTER;
+                    }
+                })
+                .setNeutralButton(getString(R.string.button_discoverable), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        mActivity.finish();
+                        dialog.dismiss();
+                    }
+                })
+                .setCancelable(false)
+                .create();
+
+        newGameAlertDialog.show();
+        // Prevent the dialog to close on click
+        newGameAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                ensureDiscoverable();
+            }
+        });
+    }
+
+    private void showWaitDialog(boolean show) {
+        if (waitDialog != null) {
+            waitDialog.dismiss();
+        }
+        if (show) {
+            (new Handler()).postDelayed(new Runnable() {
+                @Override public void run() {
+                    FragmentTransaction ft = getFragmentManager().beginTransaction();
+                    waitDialog = WaitDialogFragment.newInstance();
+                    waitDialog.show(ft, "waitDialog");
+                }
+            }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT);
+        }
     }
 
 
@@ -231,25 +495,13 @@ public class PlayActivity extends FragmentActivity {
 
 
     /**
-     * React to a PageCompletedEvent, changing the layout
-     */
-    @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
-        // If last page store stats
-        if (currentPageNum == noPages) {
-            gameStat.setEndDate(new Date());
-            storeSendStats();
-        }
-        showPageCompleted();
-    }
-
-    /**
      * React to a NextPageEvent, opening a new one or ending the game
      */
-    @Subscribe public void nextPage(NextPageEvent nextPageEvent) {
-        if (currentPageNum == noPages) {
+    @Subscribe public void nextPageEvent(NextPageEvent nextPageEvent) {
+        if (currentGameState.lastPage()) {
             showEndDialog();
         } else {
-            nextPage();
+            startPage(constructPage());
         }
     }
 
@@ -270,27 +522,10 @@ public class PlayActivity extends FragmentActivity {
                 }
             }, 3 * 1000);
         } else {
+            timeoutHandler.removeCallbacksAndMessages(null);
             String selectedWord = syllableYetSelected + syllableSelectedEvent.getSyllable().getVal();
             syllableYetSelected = "";
             showWordConfirmDialog(selectedWord);
-        }
-    }
-
-
-    /**
-     * React to a WordConfirmedEvent
-     */
-    @Subscribe public void wordConfirmed(WordConfirmedEvent wordConfirmedEvent) {
-        timeoutHandler.removeCallbacksAndMessages(null);
-        String confirmedWordString = wordConfirmedEvent.getWordConfirmed();
-        Word word = wordByLemma(confirmedWordString);
-        // If exists and it's new
-        if (word != null) {
-            Log.d("wordSelected", confirmedWordString + " exists!");
-            BUS.post(new WordSelectedEvent(word, true, currentPageWordsAvailable.contains(word)));
-        } else {
-            Log.d("wordSelected", confirmedWordString + " does not exists!");
-            BUS.post(new WordSelectedEvent(word, false, false));
         }
     }
 
@@ -302,24 +537,64 @@ public class PlayActivity extends FragmentActivity {
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
             // Save Stats
-            WordStat wordStat = new WordStat(new Date(), selectedWord.getLemma(), currentPageNum, null);
+            WordStat wordStat = new WordStat(new Date(), selectedWord.getLemma(), currentGameState.getPageNumber(), null);
             wordStats.add(wordStat);
             // Play correct sound
             soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
+            // New Game State
+            GameState newGameState = new GameState(currentGameState);
             // Update number of words to found
-            currentPageWordsToFindNum--;
-            currentPageWordsAvailable.remove(selectedWord);
-            // Pronounce the word
-            // Check if page is completed
-            if (currentPageWordsToFindNum == 0) {
-                BUS.post(new PageCompletedEvent(currentPageNum));
+            if (multi) {
+                // If MASTER update the status and send to the SLAVE
+                if (isMaster()) {
+                    newGameState.setCurrentPlayer(SLAVE);
+                    newGameState.wordFound(selectedWord);
+                    sendAndUpdateState(newGameState);
+                } else {
+                    sendNewWordFound(selectedWord);
+                }
+            } else {
+                newGameState.wordFound(selectedWord);
+                updateState(newGameState);
             }
         } else if (wordSelectedEvent.isCorrect() && !wordSelectedEvent.isNew()) {
             soundPool.play(sameSound, 1f, 1f, 0, 0, 1f);
+            if (multi) {
+                // If MASTER change current player and send new state
+                if (isMaster()) {
+                    GameState newGameState = new GameState(currentGameState);
+                    newGameState.setCurrentPlayer(SLAVE);
+                    sendAndUpdateState(newGameState);
+                } else { // If SLAVE send simple turn pass to MASTER and wait for state change
+                    sendSimpleTurnPass();
+                }
+            }
         } else {
             soundPool.play(wrongSound, 1f, 1f, 0, 0, 1f);
+            if (multi) {
+                // If MASTER change current player and send new state
+                if (isMaster()) {
+                    GameState newGameState = new GameState(currentGameState);
+                    newGameState.setCurrentPlayer(SLAVE);
+                    sendAndUpdateState(newGameState);
+                } else { // If SLAVE send simple turn pass to MASTER and wait for state change
+                    sendSimpleTurnPass();
+                }
+            }
         }
     }
+
+    /**
+     * React to a PageCompletedEvent, changing the layout
+     */
+    @Subscribe public void pageCompleted(PageCompletedEvent pageCompletedEvent) {
+        if (currentGameState.lastPage()) {
+            gameStat.setEndDate(new Date());
+            storeSendStats();
+        }
+        showPageCompleted();
+    }
+
 
     /**
      * React to a ExitEvent
@@ -342,62 +617,206 @@ public class PlayActivity extends FragmentActivity {
         sayWord(wordClickedEvent.getWord(), wordClickedEvent.getLANG());
     }
 
-
-    /* ----------------------------- Helper Methods ----------------------------- */
-
-
     /**
-     * Loads the game sounds
+     * React to a ConnectionStateChangeEvent
      */
-    private void loadSound() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            soundPool = (new SoundPool.Builder()).build();
-        } else {
-            soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
-        }
-        correctSound = soundPool.load(this, R.raw.correct, 1);
-        wrongSound = soundPool.load(this, R.raw.wrong, 1);
-        sameSound = soundPool.load(this, R.raw.same, 1);
-    }
+    @Subscribe public void connectionStateChangeEvent(ConnectionStateChangeEvent connectionStateChangeEvent) {
+        switch (connectionStateChangeEvent.getNewState()) {
+            case BluetoothService.STATE_CONNECTED:
+                if (null != mConnectedDeviceName) {
+                    connTextView.setText(role + " " + getString(R.string.bluetooth_connected) + " a " + mConnectedDeviceName);
+                } else {
+                    connTextView.setText(R.string.bluetooth_connected);
+                }
 
-    /**
-     * Loads the game preferences
-     */
-    private void loadPref() {
-        // Get match configuration
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        noPages = sp.getInt(getString(R.string.setting_no_pages_key), 1);
-        noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
-    }
-
-    /**
-     * Store statistics in the db and send the through email
-     */
-    private void storeSendStats() {
-        gameStat.save();
-        for (WordStat ws : wordStats) {
-            ws.setGameStat(gameStat);
-            ws.save();
-        }
-        boolean send = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.setting_collect_key), false);
-        if (send) {
-            GenericIntentService.sendOneGameStat(this, gameStat.getId());
+                // If it is master initialize the game, if it is slave do nothing and wait
+                if (role.equals(MASTER)) {
+                    startGame();
+                }
+                break;
+            case BluetoothService.STATE_CONNECTING:
+                connTextView.setText(R.string.bluetooth_connecting);
+                break;
+            case BluetoothService.STATE_LOST:
+                connTextView.setText(R.string.bluetooth_listening);
+                Toast.makeText(this, "Connessione persa", Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+            case BluetoothService.STATE_FAILED:
+                connTextView.setText(R.string.bluetooth_listening);
+                Toast.makeText(this, "Connessione fallita", Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+            case BluetoothService.STATE_LISTEN:
+                connTextView.setText(R.string.bluetooth_listening);
+                break;
+            case BluetoothService.STATE_NONE:
+                connTextView.setText(R.string.bluetooth_conn_def);
+                break;
         }
     }
 
     /**
-     * Get a word given its lemma
+     * React to a MessageWriteEvent
+     */
+    @Subscribe public void messageWriteEvent(MessageWriteEvent messageWriteEvent) {
+    }
+
+    /**
+     * React to a MessageWriteEvent
+     */
+    @Subscribe public void messageReadEvent(MessageReadEvent messageReadEvent) {
+        byte[] readBuf = (byte[]) messageReadEvent.getBuffer();
+        // construct a string from the valid bytes in the buffer
+        String readMessage = new String(readBuf, 0, messageReadEvent.getBytes());
+
+        // New page info from the master
+        if (readMessage.startsWith(BluetoothMessageHeader.GAME_STATE)) {
+            // Only the SLAVE should receive this message and update its game state
+            String pageInfoJson = readMessage.replace(BluetoothMessageHeader.GAME_STATE, "");
+            GameState gameState = gson.fromJson(pageInfoJson, GameState.class);
+            updateState(gameState);
+        }
+
+        // Simple turn pass
+        if (readMessage.startsWith(BluetoothMessageHeader.SIMPLE_TURN_PASS)) {
+            // Only the MASTER should receive this message, change the current player to the MASTER itself and send back to the SLAVE
+            if (isMaster()) {
+                GameState newGameState = new GameState(currentGameState);
+                newGameState.setCurrentPlayer(MASTER);
+                sendAndUpdateState(newGameState);
+            }
+        }
+
+        // Word found by the other player
+        if (readMessage.startsWith(BluetoothMessageHeader.WORD_FOUND)) {
+            String wordFoundJson = readMessage.replace(BluetoothMessageHeader.WORD_FOUND, "");
+            Word wordFound = gson.fromJson(wordFoundJson, Word.class);
+            // Only the MASTER should receive this message, update the game state and send back to the SLAVE
+            if (isMaster()) {
+                GameState newGameState = new GameState(currentGameState);
+                newGameState.wordFound(wordFound);
+                newGameState.setCurrentPlayer(MASTER);
+                sendAndUpdateState(newGameState);
+            }
+        }
+
+        // Game finishd
+        if (readMessage.startsWith(BluetoothMessageHeader.GAME_END)) {
+            showEndDialog();
+        }
+    }
+
+    /**
+     * React to a ConnectedDeviceNameEvent
+     */
+    @Subscribe public void connectedDeviceNameEvent(ConnectedDeviceNameEvent connectedDeviceNameEvent) {
+        mConnectedDeviceName = connectedDeviceNameEvent.getName();
+        connTextView.setText("Connesso a " + mConnectedDeviceName);
+        Toast.makeText(this, "Connesso a " + connectedDeviceNameEvent.getName(), Toast.LENGTH_SHORT).show();
+        newGameAlertDialog.dismiss();
+    }
+
+
+    /* ----------------------------- Bluetooth Methods ----------------------------- */
+
+
+    /**
+     * Initialize the bluetooth connection and return if the Bluetooth is supported
+     */
+    private boolean initBluetooth() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        // If the adapter is null, then Bluetooth is not supported
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * If Bluetooth is not enabled, requests to enable it (the bluetooth enable request is async, look for {@link MainActivity#onActivityResult}
      *
-     * @param word The lemma of the word to find.
-     * @return The Word if exists, null if it doesn't
+     * @return whether it was enabled
      */
-    private Word wordByLemma(String word) {
-        List<Word> wordFound = Word.find(Word.class, "lemma = ?", word);
-        if (wordFound.size() > 0) {
-            return wordFound.get(0);
-        } else {
-            return null;
+    private boolean enableBluetooth() {
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            return false;
         }
+        return true;
+    }
+
+    /**
+     * Makes this device discoverable.
+     */
+    private void ensureDiscoverable() {
+        if (mBluetoothAdapter.getScanMode() !=
+                BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+            startActivity(discoverableIntent);
+        }
+    }
+
+    /**
+     * Starts the service that handles bluetooth connections
+     */
+    private void startBluetoothService() {
+        if (mBluetoothService == null) {
+            mBluetoothService = new BluetoothService(this, BUS);
+        }
+    }
+
+    /**
+     * Sends a message.
+     *
+     * @param message A string of text to send.
+     */
+    private void sendMessage(String message) {
+        // Check that we're actually connected before trying anything
+        if (mBluetoothService.getState() != BluetoothService.STATE_CONNECTED) {
+            Log.e(TAG, String.valueOf(mBluetoothService.getState()));
+            Toast.makeText(this, R.string.error_connection_msg, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Check that there's actually something to send
+        if (message.length() > 0) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes();
+            mBluetoothService.write(send);
+        }
+    }
+
+    /**
+     * Establish connection with other device
+     *
+     * @param data An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
+     */
+    private void connectDevice(Intent data) {
+        // Get the device MAC address
+        String address = data.getExtras()
+                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+        // Get the BluetoothDevice object
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        // Attempt to connect to the device
+        mBluetoothService.connect(device);
+    }
+
+    /**
+     * Start device connection activity
+     */
+    private void showDeviceListActivity() {
+        Intent serverIntent = new Intent(this, DeviceListActivity.class);
+        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+    }
+
+    public boolean isMaster() {
+        return MASTER.equals(role);
     }
 
 
@@ -455,26 +874,50 @@ public class PlayActivity extends FragmentActivity {
     private void checkTTS() {
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-        startActivityForResult(checkTTSIntent, TTS_CHECK_ITA);
+        startActivityForResult(checkTTSIntent, REQUEST_TTS_CHECK);
+    }
+
+
+    /* ----------------------------- Helper Methods ----------------------------- */
+
+
+    /**
+     * Loads the game sounds
+     */
+    private void loadSound() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            soundPool = (new SoundPool.Builder()).build();
+        } else {
+            soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        }
+        correctSound = soundPool.load(this, R.raw.correct, 1);
+        wrongSound = soundPool.load(this, R.raw.wrong, 1);
+        sameSound = soundPool.load(this, R.raw.same, 1);
     }
 
     /**
-     * Called on TTS check
+     * Loads the game preferences
      */
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == TTS_CHECK_ITA) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-                    @Override public void onInit(int status) {
-                        ttsConfigured = true;
-                        mTTS.setLanguage(Locale.ITALIAN);
-                    }
-                });
-            } else {
-                Intent installTTSIntent = new Intent();
-                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installTTSIntent);
-            }
+    private void loadPref() {
+        // Get match configuration
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        noPages = sp.getInt(getString(R.string.setting_no_pages_key), 1);
+        noSyllables = sp.getInt(getString(R.string.setting_no_syllables_key), 4);
+    }
+
+    /**
+     * Store statistics in the db and send the through email
+     */
+    private void storeSendStats() {
+        gameStat.save();
+        for (WordStat ws : wordStats) {
+            ws.setGameStat(gameStat);
+            ws.save();
+        }
+        boolean send = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.setting_collect_key), false);
+        if (send) {
+            GenericIntentService.sendOneGameStat(this, gameStat.getId());
         }
     }
+
 }
