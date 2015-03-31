@@ -20,7 +20,6 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -98,7 +97,6 @@ public class PlayActivity extends FragmentActivity {
 
     // Helpers
     private Handler timeoutHandler;
-    private Handler timeoutTurnHandler;
     private Bus BUS;
     private SoundPool soundPool;
     private Gson gson;
@@ -119,10 +117,8 @@ public class PlayActivity extends FragmentActivity {
     // Bluetooth
     private BluetoothAdapter mBluetoothAdapter = null;
     private BluetoothService mBluetoothService = null;
-    private String mConnectedDeviceName;
 
     // UI
-    @InjectView(R.id.connection_text_view) TextView connTextView;
     @InjectView(R.id.game_loading_progress_bar) ProgressBar progressBar;
     private PlayActivity mActivity;
     private AlertDialog newGameAlertDialog;
@@ -137,10 +133,9 @@ public class PlayActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+        ButterKnife.inject(this);
         Logger.init("PlayActivity").hideThreadInfo();
         BUS = BusProvider.getInstance();
-        timeoutHandler = new Handler();
-        ButterKnife.inject(this);
         gson = new Gson();
 
         mActivity = this;
@@ -155,17 +150,20 @@ public class PlayActivity extends FragmentActivity {
         switch (action) {
             case MODE_SINGLE_PLAYER:
                 multi = false;
+                timeoutHandler = new Handler();
                 startGame();
                 break;
             case MODE_MULTI_PLAYER:
                 multi = true;
-                // If Bluetooth is supported and enabled show dialog
+                timeoutHandler = new Handler();
+                // If Bluetooth is supported and enabled show multi layout
                 if (initBluetooth() && enableBluetooth()) {
                     setupMultiPlayer();
                 }
                 break;
             default:
                 multi = false;
+                timeoutHandler = new Handler();
                 startGame();
                 break;
         }
@@ -365,7 +363,6 @@ public class PlayActivity extends FragmentActivity {
      * Make connection text view visible and start all Multi Player process before starting the game
      */
     private void setupMultiPlayer() {
-        connTextView.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.VISIBLE);
         startBluetoothService();
         showMultiPlayerDialog();
@@ -623,35 +620,24 @@ public class PlayActivity extends FragmentActivity {
     @Subscribe public void connectionStateChangeEvent(ConnectionStateChangeEvent connectionStateChangeEvent) {
         switch (connectionStateChangeEvent.getNewState()) {
             case BluetoothService.STATE_CONNECTED:
-                if (null != mConnectedDeviceName) {
-                    connTextView.setText(role + " " + getString(R.string.bluetooth_connected) + " a " + mConnectedDeviceName);
-                } else {
-                    connTextView.setText(R.string.bluetooth_connected);
-                }
-
                 // If it is master initialize the game, if it is slave do nothing and wait
                 if (role.equals(MASTER)) {
                     startGame();
                 }
                 break;
             case BluetoothService.STATE_CONNECTING:
-                connTextView.setText(R.string.bluetooth_connecting);
                 break;
             case BluetoothService.STATE_LOST:
-                connTextView.setText(R.string.bluetooth_listening);
                 Toast.makeText(this, "Connessione persa", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
             case BluetoothService.STATE_FAILED:
-                connTextView.setText(R.string.bluetooth_listening);
                 Toast.makeText(this, "Connessione fallita", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
             case BluetoothService.STATE_LISTEN:
-                connTextView.setText(R.string.bluetooth_listening);
                 break;
             case BluetoothService.STATE_NONE:
-                connTextView.setText(R.string.bluetooth_conn_def);
                 break;
         }
     }
@@ -712,7 +698,6 @@ public class PlayActivity extends FragmentActivity {
      */
     @Subscribe public void connectedDeviceNameEvent(ConnectedDeviceNameEvent connectedDeviceNameEvent) {
         mConnectedDeviceName = connectedDeviceNameEvent.getName();
-        connTextView.setText("Connesso a " + mConnectedDeviceName);
         Toast.makeText(this, "Connesso a " + connectedDeviceNameEvent.getName(), Toast.LENGTH_SHORT).show();
         newGameAlertDialog.dismiss();
     }
@@ -833,17 +818,17 @@ public class PlayActivity extends FragmentActivity {
         if (ttsConfigured) {
             mTTS.setLanguage(lang);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                if(lang.equals(Locale.ENGLISH)){
+                if (lang.equals(Locale.ENGLISH)) {
                     mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null, word.getEng());
                 }
-                if(lang.equals(Locale.ITALIAN)){
+                if (lang.equals(Locale.ITALIAN)) {
                     mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null, word.getLemma());
                 }
             } else {
-                if(lang.equals(Locale.ENGLISH)){
+                if (lang.equals(Locale.ENGLISH)) {
                     mTTS.speak(word.getEng(), TextToSpeech.QUEUE_ADD, null);
                 }
-                if(lang.equals(Locale.ITALIAN)){
+                if (lang.equals(Locale.ITALIAN)) {
                     mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null);
                 }
             }
