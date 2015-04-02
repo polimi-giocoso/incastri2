@@ -6,12 +6,25 @@ package it.gbresciani.legodigitalsonoro.events;
 public class ConnectedDeviceNameEvent {
 
     private String name;
+    private String deviceId;
 
-    public ConnectedDeviceNameEvent(String name) {
+    public ConnectedDeviceNameEvent() {
+    }
+
+    public ConnectedDeviceNameEvent(String name, String deviceId) {
         this.name = name;
+        this.deviceId = deviceId;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }

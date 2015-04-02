@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -100,6 +101,8 @@ public class PlayActivity extends FragmentActivity {
     private Bus BUS;
     private SoundPool soundPool;
     private Gson gson;
+    private String mDeviceId;
+    private String otherDeviceId;
 
     // Sounds
     private int correctSound;
@@ -139,6 +142,7 @@ public class PlayActivity extends FragmentActivity {
         gson = new Gson();
 
         mActivity = this;
+        mDeviceId = BluetoothAdapter.getDefaultAdapter().getAddress();
 
         loadPref();
         loadSound();
@@ -260,6 +264,10 @@ public class PlayActivity extends FragmentActivity {
     private void startGame() {
         gameStat = new GameStat();
         gameStat.setStartDate(new Date());
+        gameStat.setDeviceId1(mDeviceId);
+        if(multi){
+            gameStat.setDeviceId2(otherDeviceId);
+        }
         startPage(constructPage());
     }
 
@@ -270,6 +278,10 @@ public class PlayActivity extends FragmentActivity {
         gameStat = new GameStat();
         wordStats = new ArrayList<>();
         gameStat.setStartDate(new Date());
+        gameStat.setDeviceId1(mDeviceId);
+        if(multi){
+            gameStat.setDeviceId2(otherDeviceId);
+        }
         currentGameState = null;
         syllableYetSelected = "";
         backPressedCount = 0;
@@ -303,6 +315,7 @@ public class PlayActivity extends FragmentActivity {
         // If in multi the current player is also set to SLAVE
         if (multi) {
             newGameState.setCurrentPlayer(SLAVE);
+            newGameState.setCurrentPlayerDeviceId(isMaster() ? otherDeviceId : mDeviceId);
         }
         return newGameState;
     }
@@ -386,10 +399,10 @@ public class PlayActivity extends FragmentActivity {
     }
 
     private void updateState(GameState gameState) {
-        Logger.json(role + " -> updateState: currentGameState", gson.toJson(currentGameState, GameState.class));
-        Logger.json(role + " -> updateState: gameState", gson.toJson(gameState, GameState.class));
+        Logger.json(role, gson.toJson(currentGameState, GameState.class));
+        Logger.json(role, gson.toJson(gameState, GameState.class));
 
-        //If there is no currentGameState or the page number in the new state is different from the current start a new page with the new state
+        // If there is no currentGameState or the page number in the new state is different from the current start a new page with the new state
         if (currentGameState == null || currentGameState.getPageNumber() != gameState.getPageNumber()) {
             startPage(gameState);
         }
@@ -398,6 +411,7 @@ public class PlayActivity extends FragmentActivity {
             if (multi) {
                 // If MASTER found last word keep the control
                 gameState.setCurrentPlayer(MASTER);
+                gameState.setCurrentPlayerDeviceId(isMaster() ? mDeviceId : otherDeviceId);
                 if (isMaster()) {
                     BUS.post(new PageCompletedEvent(gameState.getPageNumber()));
                 }
@@ -405,9 +419,14 @@ public class PlayActivity extends FragmentActivity {
                 BUS.post(new PageCompletedEvent(gameState.getPageNumber()));
             }
         }
-        //Show dialog if it is not my turn
+        // Show dialog if it is not my turn
         if (multi) {
             showWaitDialog(!role.equals(gameState.getCurrentPlayer()));
+        }
+        // Check if there are new words and eventually store stats
+        for (Word word : Helper.getNewWordInState(gameState, currentGameState)) {
+            WordStat wordStat = new WordStat(new Date(), word.getLemma(), currentGameState.getPageNumber(), null, currentGameState.getCurrentPlayerDeviceId());
+            wordStats.add(wordStat);
         }
 
         BUS.post(new StateUpdatedEvent(gameState, currentGameState));
@@ -533,9 +552,6 @@ public class PlayActivity extends FragmentActivity {
         timeoutHandler.removeCallbacksAndMessages(null);
         Word selectedWord = wordSelectedEvent.getWord();
         if (wordSelectedEvent.isCorrect() && wordSelectedEvent.isNew()) {
-            // Save Stats
-            WordStat wordStat = new WordStat(new Date(), selectedWord.getLemma(), currentGameState.getPageNumber(), null);
-            wordStats.add(wordStat);
             // Play correct sound
             soundPool.play(correctSound, 1f, 1f, 0, 0, 1f);
             // New Game State
@@ -545,6 +561,7 @@ public class PlayActivity extends FragmentActivity {
                 // If MASTER update the status and send to the SLAVE
                 if (isMaster()) {
                     newGameState.setCurrentPlayer(SLAVE);
+                    newGameState.setCurrentPlayerDeviceId(isMaster() ? otherDeviceId : mDeviceId);
                     newGameState.wordFound(selectedWord);
                     sendAndUpdateState(newGameState);
                 } else {
@@ -561,6 +578,7 @@ public class PlayActivity extends FragmentActivity {
                 if (isMaster()) {
                     GameState newGameState = new GameState(currentGameState);
                     newGameState.setCurrentPlayer(SLAVE);
+                    newGameState.setCurrentPlayerDeviceId(isMaster() ? otherDeviceId : mDeviceId);
                     sendAndUpdateState(newGameState);
                 } else { // If SLAVE send simple turn pass to MASTER and wait for state change
                     sendSimpleTurnPass();
@@ -573,6 +591,7 @@ public class PlayActivity extends FragmentActivity {
                 if (isMaster()) {
                     GameState newGameState = new GameState(currentGameState);
                     newGameState.setCurrentPlayer(SLAVE);
+                    newGameState.setCurrentPlayerDeviceId(isMaster() ? otherDeviceId : mDeviceId);
                     sendAndUpdateState(newGameState);
                 } else { // If SLAVE send simple turn pass to MASTER and wait for state change
                     sendSimpleTurnPass();
@@ -670,6 +689,7 @@ public class PlayActivity extends FragmentActivity {
             if (isMaster()) {
                 GameState newGameState = new GameState(currentGameState);
                 newGameState.setCurrentPlayer(MASTER);
+                newGameState.setCurrentPlayerDeviceId(isMaster() ? mDeviceId : otherDeviceId);
                 sendAndUpdateState(newGameState);
             }
         }
@@ -683,6 +703,7 @@ public class PlayActivity extends FragmentActivity {
                 GameState newGameState = new GameState(currentGameState);
                 newGameState.wordFound(wordFound);
                 newGameState.setCurrentPlayer(MASTER);
+                newGameState.setCurrentPlayerDeviceId(isMaster() ? mDeviceId : otherDeviceId);
                 sendAndUpdateState(newGameState);
             }
         }
@@ -697,9 +718,9 @@ public class PlayActivity extends FragmentActivity {
      * React to a ConnectedDeviceNameEvent
      */
     @Subscribe public void connectedDeviceNameEvent(ConnectedDeviceNameEvent connectedDeviceNameEvent) {
-        mConnectedDeviceName = connectedDeviceNameEvent.getName();
         Toast.makeText(this, "Connesso a " + connectedDeviceNameEvent.getName(), Toast.LENGTH_SHORT).show();
         newGameAlertDialog.dismiss();
+        otherDeviceId = connectedDeviceNameEvent.getDeviceId();
     }
 
 

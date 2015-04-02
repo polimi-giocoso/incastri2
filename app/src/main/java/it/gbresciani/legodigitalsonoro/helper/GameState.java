@@ -16,6 +16,7 @@ public class GameState {
     public final static String PAGE_WORDS_TO_FIND_NUM = "pageWordsToFindNum";
     public final static String PAGE_SYLLABLES = "pageSyllables";
     public final static String CURRENT_PLAYER = "currentPlayer";
+    public final static String CURRENT_PLAYER_DEVICE_ID = "currentPlayerDeviceId";
 
     @SerializedName(PAGE_NUM)
     private int pageNumber;
@@ -38,10 +39,13 @@ public class GameState {
     @SerializedName(CURRENT_PLAYER)
     private String currentPlayer;
 
+    @SerializedName(CURRENT_PLAYER_DEVICE_ID)
+    private String currentPlayerDeviceId;
+
     public GameState() {
     }
 
-    public GameState(int pageNumber, int pages, int pageWordsToFindNum, ArrayList<Word> wordsAvailable, ArrayList<Word> wordsFound, ArrayList<Syllable> syllables, String currentPlayer) {
+    public GameState(int pageNumber, int pages, int pageWordsToFindNum, ArrayList<Word> wordsAvailable, ArrayList<Word> wordsFound, ArrayList<Syllable> syllables, String currentPlayer, String currentPlayerDeviceId) {
         this.pageNumber = pageNumber;
         this.pages = pages;
         this.pageWordsToFindNum = pageWordsToFindNum;
@@ -49,6 +53,7 @@ public class GameState {
         this.wordsFound = wordsFound;
         this.syllables = syllables;
         this.currentPlayer = currentPlayer;
+        this.currentPlayerDeviceId = currentPlayerDeviceId;
     }
 
     public GameState(GameState gameState) {
@@ -59,6 +64,7 @@ public class GameState {
         this.wordsFound = new ArrayList<>(gameState.wordsFound);
         this.syllables = new ArrayList<>(gameState.syllables);
         this.currentPlayer = gameState.currentPlayer;
+        this.currentPlayerDeviceId = gameState.currentPlayerDeviceId;
     }
 
 
@@ -118,6 +124,14 @@ public class GameState {
         this.wordsFound = wordsFound;
     }
 
+    public String getCurrentPlayerDeviceId() {
+        return currentPlayerDeviceId;
+    }
+
+    public void setCurrentPlayerDeviceId(String currentPlayerDeviceId) {
+        this.currentPlayerDeviceId = currentPlayerDeviceId;
+    }
+
     /**
      * Whether all words are found
      *
@@ -163,6 +177,8 @@ public class GameState {
         if (pages != gameState.pages) return false;
         if (currentPlayer != null ? !currentPlayer.equals(gameState.currentPlayer) : gameState.currentPlayer != null)
             return false;
+        if (currentPlayerDeviceId != null ? !currentPlayerDeviceId.equals(gameState.currentPlayerDeviceId) : gameState.currentPlayerDeviceId != null)
+            return false;
         if (syllables != null ? !syllables.equals(gameState.syllables) : gameState.syllables != null)
             return false;
         if (wordsAvailable != null ? !wordsAvailable.equals(gameState.wordsAvailable) : gameState.wordsAvailable != null)
@@ -182,8 +198,7 @@ public class GameState {
         result = 31 * result + (wordsFound != null ? wordsFound.hashCode() : 0);
         result = 31 * result + (syllables != null ? syllables.hashCode() : 0);
         result = 31 * result + (currentPlayer != null ? currentPlayer.hashCode() : 0);
+        result = 31 * result + (currentPlayerDeviceId != null ? currentPlayerDeviceId.hashCode() : 0);
         return result;
     }
-
-
 }

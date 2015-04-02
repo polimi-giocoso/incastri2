@@ -4,24 +4,24 @@ import com.orm.SugarRecord;
 
 import java.util.Date;
 
-/**
- * Created by bear on 15/03/15.
- */
+
 public class WordStat extends SugarRecord<WordStat> {
 
     private Date foundDate;
     private String word;
     private int pageNumber;
     private GameStat gameStat;
+    private String deviceId;
 
     public WordStat() {
     }
 
-    public WordStat(Date foundDate, String word, int pageNumber, GameStat gameStat) {
+    public WordStat(Date foundDate, String word, int pageNumber, GameStat gameStat, String device) {
         this.foundDate = foundDate;
         this.word = word;
         this.pageNumber = pageNumber;
         this.gameStat = gameStat;
+        this.deviceId = device;
     }
 
     public Date getFoundDate() {
@@ -54,5 +54,13 @@ public class WordStat extends SugarRecord<WordStat> {
 
     public void setPageNumber(int pageNumber) {
         this.pageNumber = pageNumber;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }
