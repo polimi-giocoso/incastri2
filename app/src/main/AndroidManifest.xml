@@ -45,7 +45,7 @@
             android:value="false"/>
         <meta-data
             android:name="DOMAIN_PACKAGE_NAME"
-            android:value="it.gbresciani.poligame.model"/>
+            android:value="it.gbresciani.legodigitalsonoro.model"/>
 
         <activity
             android:name=".activities.PlayActivity"
