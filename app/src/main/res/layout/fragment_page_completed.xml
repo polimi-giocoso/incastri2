@@ -14,19 +14,4 @@
         android:background="@drawable/next_selector"
         />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/page_completed_message"
-        android:id="@+id/textView"
-        android:textAllCaps="true"
-        android:textColor="@android:color/secondary_text_light"
-        android:textStyle="bold"
-        android:textSize="30dp"
-        android:layout_marginBottom="100dp"
-        android:layout_above="@+id/next_page_image_view"
-        android:layout_centerHorizontal="true"/>
-
-
 </RelativeLayout>
