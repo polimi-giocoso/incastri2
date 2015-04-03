@@ -1,33 +1,39 @@
-package it.gbresciani.legodigitalsonoro.activities;
+package it.gbresciani.legodigitalsonoro.fragments;
 
-import android.app.Activity;
+
+import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Window;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.squareup.otto.Bus;
+
 import java.util.Set;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
 import it.gbresciani.legodigitalsonoro.R;
+import it.gbresciani.legodigitalsonoro.activities.PlayActivity;
+import it.gbresciani.legodigitalsonoro.events.DeviceSelectedEvent;
+import it.gbresciani.legodigitalsonoro.helper.BusProvider;
 
-/**
- * This Activity appears as a dialog. It lists any paired devices and
- * devices detected in the area after discovery. When a device is chosen
- * by the user, the MAC address of the device is sent back to the parent
- * Activity in the result Intent.
- */
-public class DeviceListActivity extends Activity {
+
+public class MultiSetupDialogFragment extends DialogFragment {
 
     /**
      * Tag for Log
@@ -49,50 +55,93 @@ public class DeviceListActivity extends Activity {
      */
     private ArrayAdapter<String> mNewDevicesArrayAdapter;
 
+    private PlayActivity playActivity;
+
+    private Bus BUS;
+
+    @InjectView(R.id.paired_devices) ListView pairedListView;
+    @InjectView(R.id.new_devices) ListView newDevicesListView;
+    @InjectView(R.id.discovery_layout) LinearLayout discoveryLayout;
+    @InjectView(R.id.add_discovery_layout) LinearLayout addDiscoveryLayout;
+
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @return A new instance of fragment MultiSetupDialogFragment.
+     */
+    // TODO: Rename and change types and number of parameters
+    public static MultiSetupDialogFragment newInstance() {
+        MultiSetupDialogFragment fragment = new MultiSetupDialogFragment();
+        return fragment;
+    }
+
+    public MultiSetupDialogFragment() {
+        // Required empty public constructor
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        BUS = BusProvider.getInstance();
+        playActivity = (PlayActivity) getActivity();
+        int style = DialogFragment.STYLE_NO_TITLE, theme = android.R.style.Theme_DeviceDefault_Dialog;
+        setStyle(style, theme);
+    }
 
-        // Setup the window
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.activity_device_list);
-        setFinishOnTouchOutside(false);
 
-        // Set result CANCELED in case the user backs out
-        setResult(Activity.RESULT_CANCELED);
+    @Override public void onCancel(DialogInterface dialog) {
+        super.onCancel(dialog);
+        // Make sure we're not doing discovery anymore
+        if (mBtAdapter != null) {
+            mBtAdapter.cancelDiscovery();
+        }
 
-        // Initialize the button to perform device discovery
-        Button scanButton = (Button) findViewById(R.id.button_scan);
-        scanButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                doDiscovery();
-                v.setVisibility(View.GONE);
-            }
-        });
+        // Unregister broadcast listeners
+        playActivity.finish();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        BUS.register(this);
+        // Register for broadcasts when a device is discovered
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        playActivity.registerReceiver(mReceiver, filter);
+
+        // Register for broadcasts when discovery has finished
+        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        playActivity.registerReceiver(mReceiver, filter);
+    }
+
+    @Override
+    public void onPause() {
+        BUS.unregister(this);
+        playActivity.unregisterReceiver(mReceiver);
+        super.onPause();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_multi_setup_dialog, container, false);
+        ButterKnife.inject(this, v);
+
 
         // Initialize array adapters. One for already paired devices and
         // one for newly discovered devices
         ArrayAdapter<String> pairedDevicesArrayAdapter =
-                new ArrayAdapter<String>(this, R.layout.device_name);
-        mNewDevicesArrayAdapter = new ArrayAdapter<String>(this, R.layout.device_name);
+                new ArrayAdapter<String>(playActivity, R.layout.device_name);
+        mNewDevicesArrayAdapter = new ArrayAdapter<String>(playActivity, R.layout.device_name);
 
         // Find and set up the ListView for paired devices
-        ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
         pairedListView.setAdapter(pairedDevicesArrayAdapter);
         pairedListView.setOnItemClickListener(mDeviceClickListener);
 
         // Find and set up the ListView for newly discovered devices
-        ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
         newDevicesListView.setOnItemClickListener(mDeviceClickListener);
-
-        // Register for broadcasts when a device is discovered
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        this.registerReceiver(mReceiver, filter);
-
-        // Register for broadcasts when discovery has finished
-        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        this.registerReceiver(mReceiver, filter);
 
         // Get the local Bluetooth adapter
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -102,7 +151,6 @@ public class DeviceListActivity extends Activity {
 
         // If there are paired devices, add each one to the ArrayAdapter
         if (pairedDevices.size() > 0) {
-            findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices) {
                 pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
             }
@@ -110,19 +158,15 @@ public class DeviceListActivity extends Activity {
             String noDevices = getResources().getText(R.string.none_paired).toString();
             pairedDevicesArrayAdapter.add(noDevices);
         }
+        return v;
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    @Override public void onStart() {
+        super.onStart();
 
-        // Make sure we're not doing discovery anymore
-        if (mBtAdapter != null) {
-            mBtAdapter.cancelDiscovery();
+        if (getDialog() == null) {
+            return;
         }
-
-        // Unregister broadcast listeners
-        this.unregisterReceiver(mReceiver);
     }
 
     /**
@@ -131,12 +175,9 @@ public class DeviceListActivity extends Activity {
     private void doDiscovery() {
         Log.d(TAG, "doDiscovery()");
 
-        // Indicate scanning in the title
-        setProgressBarIndeterminateVisibility(true);
-        setTitle(R.string.scanning);
-
         // Turn on sub-title for new devices
-        findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
+        discoveryLayout.setVisibility(View.VISIBLE);
+        addDiscoveryLayout.setVisibility(View.GONE);
 
         // If we're already discovering, stop it
         if (mBtAdapter.isDiscovering()) {
@@ -146,7 +187,6 @@ public class DeviceListActivity extends Activity {
         // Request discover from BluetoothAdapter
         mBtAdapter.startDiscovery();
     }
-
 
     /**
      * The on-click listener for all devices in the ListViews
@@ -166,8 +206,7 @@ public class DeviceListActivity extends Activity {
             intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
 
             // Set result and finish this Activity
-            setResult(Activity.RESULT_OK, intent);
-            finish();
+            BUS.post(new DeviceSelectedEvent(address));
         }
     };
 
@@ -190,8 +229,6 @@ public class DeviceListActivity extends Activity {
                 }
                 // When discovery is finished, change the Activity title
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                setProgressBarIndeterminateVisibility(false);
-                setTitle(R.string.select_device);
                 if (mNewDevicesArrayAdapter.getCount() == 0) {
                     String noDevices = getResources().getText(R.string.none_found).toString();
                     mNewDevicesArrayAdapter.add(noDevices);
@@ -199,5 +236,24 @@ public class DeviceListActivity extends Activity {
             }
         }
     };
+
+    @OnClick(R.id.button_scan)
+    public void addPlayer() {
+        ensureDiscoverable();
+        doDiscovery();
+    }
+
+    /**
+     * Makes this device discoverable.
+     */
+    private void ensureDiscoverable() {
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter.getScanMode() !=
+                BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+            startActivity(discoverableIntent);
+        }
+    }
 
 }
