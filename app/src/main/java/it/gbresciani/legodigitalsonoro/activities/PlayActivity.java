@@ -598,7 +598,7 @@ public class PlayActivity extends FragmentActivity {
     @Subscribe public void connectionStateChangeEvent(ConnectionStateChangeEvent connectionStateChangeEvent) {
         switch (connectionStateChangeEvent.getNewState()) {
             case BluetoothService.STATE_CONNECTED:
-                Toast.makeText(this, "Connessione stabilita", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Connessione stabilita", Toast.LENGTH_SHORT).show();
                 // If it is master initialize the game, if it is slave do nothing and wait
                 if (isMaster()) {
                     startGame();
@@ -607,11 +607,11 @@ public class PlayActivity extends FragmentActivity {
             case BluetoothService.STATE_CONNECTING:
                 break;
             case BluetoothService.STATE_LOST:
-                Toast.makeText(this, "Connessione persa", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Connessione persa", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
             case BluetoothService.STATE_FAILED:
-                Toast.makeText(this, "Connessione fallita", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Connessione fallita", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
             case BluetoothService.STATE_LISTEN:
@@ -681,6 +681,7 @@ public class PlayActivity extends FragmentActivity {
         Toast.makeText(this, "Connesso a " + connectedDeviceNameEvent.getName(), Toast.LENGTH_SHORT).show();
         newGameAlertDialog.dismiss();
         otherDeviceId = connectedDeviceNameEvent.getDeviceId();
+
     }
 
     /**
@@ -858,6 +859,7 @@ public class PlayActivity extends FragmentActivity {
      * Store statistics in the db and send the through email
      */
     private void storeSendStats() {
+        gameStat.setDeviceId2(otherDeviceId);
         gameStat.save();
         for (WordStat ws : wordStats) {
             ws.setGameStat(gameStat);
