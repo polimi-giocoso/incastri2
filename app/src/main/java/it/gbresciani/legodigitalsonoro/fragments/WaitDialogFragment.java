@@ -74,11 +74,6 @@ public class WaitDialogFragment extends DialogFragment {
         if (getDialog() == null) {
             return;
         }
-//
-//        int dialogWidth = 1200;
-//        int dialogHeight = 1200;
-//
-//        getDialog().getWindow().setLayout(dialogWidth, dialogHeight);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
     }
