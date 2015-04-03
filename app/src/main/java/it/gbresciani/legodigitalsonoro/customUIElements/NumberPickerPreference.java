@@ -10,7 +10,7 @@ import android.widget.NumberPicker;
 
 import it.gbresciani.legodigitalsonoro.R;
 
-public class NumberPickerPreference extends DialogPreference{
+public class NumberPickerPreference extends DialogPreference {
 
     private NumberPicker numberPicker;
 
@@ -37,7 +37,7 @@ public class NumberPickerPreference extends DialogPreference{
     @Override
     protected void onBindDialogView(View view) {
         super.onBindDialogView(view);
-        numberPicker = ((NumberPicker)view.findViewById(R.id.pref_interval_number_picker));
+        numberPicker = ((NumberPicker) view.findViewById(R.id.pref_interval_number_picker));
         numberPicker.setMaxValue(max);
         numberPicker.setMinValue(min);
         numberPicker.setValue(getPersistedInt(min));

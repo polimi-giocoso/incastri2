@@ -22,12 +22,11 @@ public class DataCollectPreference extends CheckBoxPreference {
     }
 
 
-
     @Override protected void onClick() {
-        String email = getSharedPreferences().getString(mContext.getResources().getString(R.string.setting_email_key),"");
-        if("".equals(email)){
+        String email = getSharedPreferences().getString(mContext.getResources().getString(R.string.setting_email_key), "");
+        if ("".equals(email)) {
             BUS.post(new NoEmailEvent());
-        }else {
+        } else {
             super.onClick();
         }
     }

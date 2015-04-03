@@ -48,17 +48,8 @@ public class WordsFragment extends Fragment {
     private ArrayList<ImageView> usedFlags = new ArrayList<>();
     private List<Word> foundWords = new ArrayList<>();
 
-
     @InjectView(R.id.words_container) LinearLayout wordsContainerLinearLayout;
 
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param words The list of words available in this pagew.
-     * @return A new instance of fragment WordsFragment.
-     */
     public static WordsFragment newInstance(ArrayList<Word> words) {
         WordsFragment fragment = new WordsFragment();
         Bundle args = new Bundle();

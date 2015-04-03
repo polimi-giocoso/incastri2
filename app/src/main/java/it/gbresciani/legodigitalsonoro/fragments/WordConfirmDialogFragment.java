@@ -52,14 +52,6 @@ public class WordConfirmDialogFragment extends DialogFragment {
 
     private Bus BUS;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param word Parameter 1.
-     * @return A new instance of fragment WordConfirmDialogFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static WordConfirmDialogFragment newInstance(String word) {
         WordConfirmDialogFragment fragment = new WordConfirmDialogFragment();
         Bundle args = new Bundle();

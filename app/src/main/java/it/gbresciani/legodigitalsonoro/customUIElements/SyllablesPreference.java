@@ -35,10 +35,10 @@ public class SyllablesPreference extends DialogPreference {
         ButterKnife.inject(this, view);
 
         int noSyllables = getPersistedInt(defaultNumber);
-        if(noSyllables == 4){
+        if (noSyllables == 4) {
             syllablesRadioGroup.check(R.id.four_syllables_radio_button);
         }
-        if(noSyllables == 2){
+        if (noSyllables == 2) {
             syllablesRadioGroup.check(R.id.two_syllables_radio_button);
         }
     }
@@ -47,10 +47,10 @@ public class SyllablesPreference extends DialogPreference {
     protected void onDialogClosed(boolean positiveResult) {
         // When the user selects "OK", persist the new value
         if (positiveResult) {
-            if(syllablesRadioGroup.getCheckedRadioButtonId() == R.id.four_syllables_radio_button){
+            if (syllablesRadioGroup.getCheckedRadioButtonId() == R.id.four_syllables_radio_button) {
                 persistInt(4);
             }
-            if(syllablesRadioGroup.getCheckedRadioButtonId()== R.id.two_syllables_radio_button){
+            if (syllablesRadioGroup.getCheckedRadioButtonId() == R.id.two_syllables_radio_button) {
                 persistInt(2);
             }
         }

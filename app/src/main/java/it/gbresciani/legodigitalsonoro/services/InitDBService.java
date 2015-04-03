@@ -65,7 +65,6 @@ public class InitDBService extends IntentService {
     }
 
 
-
     @Override
     public void onDestroy() {
         BUS.unregister(this);

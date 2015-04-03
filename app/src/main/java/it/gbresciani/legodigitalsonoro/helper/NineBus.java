@@ -30,9 +30,9 @@ public class NineBus extends Bus {
     }
 
     @Override public void post(final Object event) {
-        if(Looper.myLooper() == Looper.getMainLooper()){
+        if (Looper.myLooper() == Looper.getMainLooper()) {
             super.post(event);
-        }else{
+        } else {
             mainThread.post(new Runnable() {
                 @Override public void run() {
                     NineBus.super.post(event);

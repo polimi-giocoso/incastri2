@@ -4,9 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 
 import com.orm.query.Condition;
 import com.orm.query.Select;
@@ -81,19 +79,19 @@ public class GenericIntentService extends IntentService {
         String subject = "Partita " + String.valueOf(gameStatId);
         String body;
         body = "Dispositivo 1: " + gameStat.getDeviceId1() + "\n";
-        if(gameStat.getDeviceId2() != null){
+        if (gameStat.getDeviceId2() != null) {
             body += "Dispositivo 2: " + gameStat.getDeviceId2() + "\n";
         }
         body += "Tempo totale: " + String.format("%02d", minutes) + ":" + String.format("%02d", relativeSeconds) + "\n";
-        for(WordStat ws : wordStats){
+        for (WordStat ws : wordStats) {
             long wordTime = ws.getFoundDate().getTime() - gameStat.getStartDate().getTime();
             long wordSeconds = TimeUnit.MILLISECONDS.toSeconds(wordTime);
             long wordMinutes = TimeUnit.MILLISECONDS.toMinutes(wordTime);
             long wordRelativeSeconds = wordSeconds % 60;
             String device;
-            if(ws.getDeviceId() != null) {
+            if (ws.getDeviceId() != null) {
                 device = (ws.getDeviceId().equals(gameStat.getDeviceId1())) ? "1" : "2";
-            }else {
+            } else {
                 device = "1";
             }
             body += device + " - " + ws.getWord() + ": " + String.format("%02d", wordMinutes) + ":" + String.format("%02d", wordRelativeSeconds) + " (" + String.valueOf(ws.getPageNumber()) + ")" + "\n";

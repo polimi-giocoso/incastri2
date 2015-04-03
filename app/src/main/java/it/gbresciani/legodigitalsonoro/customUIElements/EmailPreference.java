@@ -33,17 +33,17 @@ public class EmailPreference extends EditTextPreference {
         super.showDialog(state);
 
         final EditText editText = getEditText();
-        final AlertDialog d = (AlertDialog)getDialog();
+        final AlertDialog d = (AlertDialog) getDialog();
 
         //Validate email on OK click
         d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 String emailToValidate = editText.getText().toString();
-                boolean isEmpty= "".equals(emailToValidate);
+                boolean isEmpty = "".equals(emailToValidate);
                 if (!isEmpty && !Helper.isValidEmail(emailToValidate)) {
                     editText.setError(mContext.getResources().getString(R.string.mail_not_valid_message));
                 } else {
-                    if(isEmpty){
+                    if (isEmpty) {
                         // Disable data collect
                         getSharedPreferences().edit().putBoolean(mContext.getResources().getString(R.string.setting_collect_key), false).commit();
                     }

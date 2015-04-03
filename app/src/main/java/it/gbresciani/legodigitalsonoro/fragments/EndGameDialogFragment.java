@@ -31,13 +31,6 @@ public class EndGameDialogFragment extends DialogFragment {
     @InjectView(R.id.repeat_button_dialog) ImageButton repeatButton;
     @InjectView(R.id.exit_button_dialog) ImageButton exitButton;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment WordConfirmDialogFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static EndGameDialogFragment newInstance(boolean passive) {
         EndGameDialogFragment fragment = new EndGameDialogFragment();
         Bundle args = new Bundle();
@@ -78,7 +71,7 @@ public class EndGameDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_end_game_dialog, container, false);
         ButterKnife.inject(this, v);
-        if(passive){
+        if (passive) {
             exitButton.setVisibility(View.GONE);
             repeatButton.setVisibility(View.GONE);
         }
