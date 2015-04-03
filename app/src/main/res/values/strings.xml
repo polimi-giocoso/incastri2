@@ -36,8 +36,8 @@
     <string name="exit_dialog_message">Se esci tutti i progressi andranno persi!</string>
     <string name="exit_dialog_title">Termina partita</string>
     <string name="settings_text">Settings</string>
-    <string name="title_other_devices">Altri Dispositivi</string>
-    <string name="title_paired_devices">Dispositivi accoppiati</string>
+    <string name="title_other_devices">Nuovi Giocatori</string>
+    <string name="title_paired_devices">Giocatori passati</string>
     <string name="none_paired">Nessun dispositivo è stato accoppiato</string>
     <string name="scanning">Ricerca...</string>
     <string name="none_found">Nessun dispositivo trovato</string>

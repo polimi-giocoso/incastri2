@@ -170,10 +170,10 @@ public class BluetoothService {
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
 
+        setState(STATE_CONNECTED);
+
         // Send the name of the connected device back to the UI Activity
         BUS.post(new ConnectedDeviceNameEvent(device.getName(), device.getAddress()));
-
-        setState(STATE_CONNECTED);
     }
 
     /**

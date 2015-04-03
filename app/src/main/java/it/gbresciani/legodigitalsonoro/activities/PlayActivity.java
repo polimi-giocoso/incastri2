@@ -1,12 +1,10 @@
 package it.gbresciani.legodigitalsonoro.activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -15,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -24,7 +21,6 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.orhanobut.logger.Logger;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -37,6 +33,7 @@ import butterknife.InjectView;
 import it.gbresciani.legodigitalsonoro.R;
 import it.gbresciani.legodigitalsonoro.events.ConnectedDeviceNameEvent;
 import it.gbresciani.legodigitalsonoro.events.ConnectionStateChangeEvent;
+import it.gbresciani.legodigitalsonoro.events.DeviceSelectedEvent;
 import it.gbresciani.legodigitalsonoro.events.ExitEvent;
 import it.gbresciani.legodigitalsonoro.events.MessageReadEvent;
 import it.gbresciani.legodigitalsonoro.events.MessageWriteEvent;
@@ -49,12 +46,13 @@ import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordDismissedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.fragments.EndGameDialogFragment;
+import it.gbresciani.legodigitalsonoro.fragments.MultiSetupDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.PageCompletedFragment;
 import it.gbresciani.legodigitalsonoro.fragments.SyllablesFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WaitDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordConfirmDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordsFragment;
-import it.gbresciani.legodigitalsonoro.helper.BluetoothMessageHeader;
+import it.gbresciani.legodigitalsonoro.helper.Constants;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
 import it.gbresciani.legodigitalsonoro.helper.GameState;
 import it.gbresciani.legodigitalsonoro.helper.Helper;
@@ -79,7 +77,6 @@ public class PlayActivity extends FragmentActivity {
     public static final String MASTER = "master";
     public static final String SLAVE = "slave";
 
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int REQUEST_TTS_CHECK = 3;
 
@@ -123,8 +120,7 @@ public class PlayActivity extends FragmentActivity {
 
     // UI
     @InjectView(R.id.game_loading_progress_bar) ProgressBar progressBar;
-    private PlayActivity mActivity;
-    private AlertDialog newGameAlertDialog;
+    private MultiSetupDialogFragment newGameAlertDialog;
     private WaitDialogFragment waitDialog;
     private EndGameDialogFragment ed;
 
@@ -137,11 +133,9 @@ public class PlayActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
         ButterKnife.inject(this);
-        Logger.init("PlayActivity").hideThreadInfo();
         BUS = BusProvider.getInstance();
         gson = new Gson();
 
-        mActivity = this;
         mDeviceId = BluetoothAdapter.getDefaultAdapter().getAddress();
 
         loadPref();
@@ -193,16 +187,18 @@ public class PlayActivity extends FragmentActivity {
     @Override
     protected void onPause() {
         BUS.unregister(this);
+
+        if (mBluetoothService != null) {
+            mBluetoothService.stop();
+        }
         super.onPause();
     }
+
 
     @Override protected void onDestroy() {
         if (mTTS != null) {
             mTTS.stop();
             mTTS.shutdown();
-        }
-        if (mBluetoothService != null) {
-            mBluetoothService.stop();
         }
         super.onDestroy();
     }
@@ -216,15 +212,6 @@ public class PlayActivity extends FragmentActivity {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case REQUEST_CONNECT_DEVICE_SECURE:
-                // When DeviceListActivity returns with a device to connect
-                if (resultCode == Activity.RESULT_OK) {
-                    connectDevice(data);
-                }
-                if (resultCode == Activity.RESULT_CANCELED) {
-                    finish();
-                }
-                break;
             case REQUEST_ENABLE_BT:
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
@@ -265,7 +252,7 @@ public class PlayActivity extends FragmentActivity {
         gameStat = new GameStat();
         gameStat.setStartDate(new Date());
         gameStat.setDeviceId1(mDeviceId);
-        if(multi){
+        if (multi) {
             gameStat.setDeviceId2(otherDeviceId);
         }
         startPage(constructPage());
@@ -279,7 +266,7 @@ public class PlayActivity extends FragmentActivity {
         wordStats = new ArrayList<>();
         gameStat.setStartDate(new Date());
         gameStat.setDeviceId1(mDeviceId);
-        if(multi){
+        if (multi) {
             gameStat.setDeviceId2(otherDeviceId);
         }
         currentGameState = null;
@@ -382,15 +369,15 @@ public class PlayActivity extends FragmentActivity {
     }
 
     private void sendSimpleTurnPass() {
-        sendMessage(BluetoothMessageHeader.SIMPLE_TURN_PASS);
+        sendMessage(Constants.SIMPLE_TURN_PASS);
     }
 
     private void sendNewWordFound(Word word) {
-        sendMessage(BluetoothMessageHeader.WORD_FOUND + gson.toJson(word, Word.class));
+        sendMessage(Constants.WORD_FOUND + gson.toJson(word, Word.class));
     }
 
     private void sendAndUpdateState(GameState gameState) {
-        sendMessage(BluetoothMessageHeader.GAME_STATE + gson.toJson(gameState, GameState.class));
+        sendMessage(Constants.GAME_STATE + gson.toJson(gameState, GameState.class));
         updateState(gameState);
     }
 
@@ -399,8 +386,6 @@ public class PlayActivity extends FragmentActivity {
     }
 
     private void updateState(GameState gameState) {
-        Logger.json(role, gson.toJson(currentGameState, GameState.class));
-        Logger.json(role, gson.toJson(gameState, GameState.class));
 
         // If there is no currentGameState or the page number in the new state is different from the current start a new page with the new state
         if (currentGameState == null || currentGameState.getPageNumber() != gameState.getPageNumber()) {
@@ -460,35 +445,10 @@ public class PlayActivity extends FragmentActivity {
     }
 
     private void showMultiPlayerDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        newGameAlertDialog = builder.setTitle(getString(R.string.new_game_multi_dialog_title))
-                .setMessage(getString(R.string.new_game_multi_message))
-                .setPositiveButton(getString(R.string.new_game_multi), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                        showDeviceListActivity();
-                        role = MASTER;
-                    }
-                })
-                .setNeutralButton(getString(R.string.button_discoverable), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                    }
-                })
-                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                        mActivity.finish();
-                        dialog.dismiss();
-                    }
-                })
-                .setCancelable(false)
-                .create();
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        newGameAlertDialog = MultiSetupDialogFragment.newInstance();
+        newGameAlertDialog.show(ft, "multi");
 
-        newGameAlertDialog.show();
-        // Prevent the dialog to close on click
-        newGameAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                ensureDiscoverable();
-            }
-        });
     }
 
     private void showWaitDialog(boolean show) {
@@ -505,7 +465,6 @@ public class PlayActivity extends FragmentActivity {
             }, WordConfirmDialogFragment.WORD_DIALOG_TIMEOUT);
         }
     }
-
 
     /* ----------------------------- Bus Events Methods ----------------------------- */
 
@@ -639,8 +598,9 @@ public class PlayActivity extends FragmentActivity {
     @Subscribe public void connectionStateChangeEvent(ConnectionStateChangeEvent connectionStateChangeEvent) {
         switch (connectionStateChangeEvent.getNewState()) {
             case BluetoothService.STATE_CONNECTED:
+                Toast.makeText(this, "Connessione stabilita", Toast.LENGTH_SHORT).show();
                 // If it is master initialize the game, if it is slave do nothing and wait
-                if (role.equals(MASTER)) {
+                if (isMaster()) {
                     startGame();
                 }
                 break;
@@ -676,15 +636,15 @@ public class PlayActivity extends FragmentActivity {
         String readMessage = new String(readBuf, 0, messageReadEvent.getBytes());
 
         // New page info from the master
-        if (readMessage.startsWith(BluetoothMessageHeader.GAME_STATE)) {
+        if (readMessage.startsWith(Constants.GAME_STATE)) {
             // Only the SLAVE should receive this message and update its game state
-            String pageInfoJson = readMessage.replace(BluetoothMessageHeader.GAME_STATE, "");
+            String pageInfoJson = readMessage.replace(Constants.GAME_STATE, "");
             GameState gameState = gson.fromJson(pageInfoJson, GameState.class);
             updateState(gameState);
         }
 
         // Simple turn pass
-        if (readMessage.startsWith(BluetoothMessageHeader.SIMPLE_TURN_PASS)) {
+        if (readMessage.startsWith(Constants.SIMPLE_TURN_PASS)) {
             // Only the MASTER should receive this message, change the current player to the MASTER itself and send back to the SLAVE
             if (isMaster()) {
                 GameState newGameState = new GameState(currentGameState);
@@ -695,8 +655,8 @@ public class PlayActivity extends FragmentActivity {
         }
 
         // Word found by the other player
-        if (readMessage.startsWith(BluetoothMessageHeader.WORD_FOUND)) {
-            String wordFoundJson = readMessage.replace(BluetoothMessageHeader.WORD_FOUND, "");
+        if (readMessage.startsWith(Constants.WORD_FOUND)) {
+            String wordFoundJson = readMessage.replace(Constants.WORD_FOUND, "");
             Word wordFound = gson.fromJson(wordFoundJson, Word.class);
             // Only the MASTER should receive this message, update the game state and send back to the SLAVE
             if (isMaster()) {
@@ -709,7 +669,7 @@ public class PlayActivity extends FragmentActivity {
         }
 
         // Game finishd
-        if (readMessage.startsWith(BluetoothMessageHeader.GAME_END)) {
+        if (readMessage.startsWith(Constants.GAME_END)) {
             showEndDialog();
         }
     }
@@ -721,6 +681,14 @@ public class PlayActivity extends FragmentActivity {
         Toast.makeText(this, "Connesso a " + connectedDeviceNameEvent.getName(), Toast.LENGTH_SHORT).show();
         newGameAlertDialog.dismiss();
         otherDeviceId = connectedDeviceNameEvent.getDeviceId();
+    }
+
+    /**
+     * React to a ConnectedDeviceNameEvent
+     */
+    @Subscribe public void deviceSelectedEvent(DeviceSelectedEvent deviceSelectedEvent) {
+        connectDevice(deviceSelectedEvent.getDeviceId());
+        role = MASTER;
     }
 
 
@@ -756,18 +724,6 @@ public class PlayActivity extends FragmentActivity {
     }
 
     /**
-     * Makes this device discoverable.
-     */
-    private void ensureDiscoverable() {
-        if (mBluetoothAdapter.getScanMode() !=
-                BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-            startActivity(discoverableIntent);
-        }
-    }
-
-    /**
      * Starts the service that handles bluetooth connections
      */
     private void startBluetoothService() {
@@ -800,25 +756,12 @@ public class PlayActivity extends FragmentActivity {
 
     /**
      * Establish connection with other device
-     *
-     * @param data An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
      */
-    private void connectDevice(Intent data) {
-        // Get the device MAC address
-        String address = data.getExtras()
-                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+    private void connectDevice(String deviceAddress) {
         // Get the BluetoothDevice object
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
         // Attempt to connect to the device
         mBluetoothService.connect(device);
-    }
-
-    /**
-     * Start device connection activity
-     */
-    private void showDeviceListActivity() {
-        Intent serverIntent = new Intent(this, DeviceListActivity.class);
-        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
     }
 
     public boolean isMaster() {
