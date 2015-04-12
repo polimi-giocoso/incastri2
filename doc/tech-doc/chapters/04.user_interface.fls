@@ -1,0 +1,10 @@
+PWD /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech-doc/chapters
+INPUT /usr/local/texlive/2014basic/texmf.cnf
+INPUT /usr/local/texlive/2014basic/texmf-dist/web2c/texmf.cnf
+INPUT /usr/local/texlive/2014basic/texmf-var/web2c/pdftex/pdflatex.fmt
+INPUT /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech-doc/chapters/04.user_interface.tex
+OUTPUT /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech-doc/chapters/04.user_interface.log
+INPUT /usr/local/texlive/2014basic/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm
+OUTPUT /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech-doc/chapters/04.user_interface.pdf
+INPUT /usr/local/texlive/2014basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map
+INPUT /usr/local/texlive/2014basic/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm

@@ -1,0 +1,109 @@
+%!TEX root = ../Documentazione.tex
+%%--------------------------------------------------------------------------
+%% LOGICA DI GIOCO
+%%--------------------------------------------------------------------------
+
+
+
+\chapter{Logica di gioco}
+
+La logica di gioco è affidata all'Activity \code{PlayActivity}; essa gestisce inoltre i \code{Fragments} (vedi capitolo \ref{chap:ui}) che visualizzano l'Intefaccia Utente.
+
+\section{Glossary}
+\label{sec:glossary}
+In questa sezione vengono descritti acuni termini utili alla comprensione delle successive sezioni.
+
+\begin{description}
+\item[Page] Una partita è composta da una o più pagine. Una pagina può contenere 2 o 4 sillable e da 1 a 4 parole da trovare
+\item[User role] Durante una partita multi player i giocatori si distinguono in ``master'', colui che ``orchestra'' la partita, e ``slave'', colui che vi partecipa in modo passivo 
+\item[Turno] Durante una partita multi player rappresenta la possibilità per un giocatore di provare a indovinare una parola. Il giocatore che non è in possesso del turno attende la mossa dell'altro
+\end{description}
+
+\section{Event Bus}
+\label{sec:event_bus}
+Per far comunicare i vari componenti dell'applicazione (\code{Activities}, \code{Fragments}, \code{Services}) è stato utilizzato Otto\footnote{\todo{Link}}, un \textit{Event Bus}, sviluppaato appositamente per Android, che permette ai vari componenti di postare eventi su un unico Bus e per riceverli in modo asincrono.\\
+La classe \code{BusProvider} permette, tramite un metodo statico, di accedere allo stesso Bus in ogni punto dell'applicazione.\\
+All'interno del package \code{package it.gbresciani.legodigitalsonoro.events;
+} son presenti numerose classi (ad esempio \code{WordClickedEvent} o \code{PageCompletedEvent}) che rappresentano i diversi eventi generati e ``ascoltati'' dai componenti dell'app.\\
+La classe \code{NineBus} è una piccola estensione del Bus predefinito di Otto che permette tutti gli eventi sul \code{Main Thread}, anche se generati in un altro \code{Thread}.
+
+\section{GameState}
+\label{sec:game_state}
+\code{GameState} è la classe che rappresenta lo stato di una partita, sia essa single o multi player. Viene inizializzato da \code{PlayActivity}, e aggiornato durante il corso della partita in seguito ai diversi eventi prodotti dagli altri componenti dell'app.\\
+I suoi attributi sono:
+\begin{description}
+    \item[pageNumber] Il numero di pagina corrente
+    \item[pages] Il numero di pagine totali della partita in corso (stabilito nelle impostazioni)
+    \item[pageWordsToFindNum] Il numero di parole ancora da trovare nella pagina corrente
+    \item[wordsAvailable] Un \code{ArrayList} contentente le parole ancora da trovare
+    \item[wordsFound] Un \code{ArrayList} contenente le parole gia trovate
+    \item[syllables] Un \code{ArrayList} contenente le syllabe presenti nella pagina corrente
+    \item[currentPlayer] Se la partita è multi player contiene una stringa che rappresenta il ruolo del giocatore che detieni in quel momento il turno
+    \item[currentPlayerDeviceId] Se la partita è multi player contiene una stringa che rappresenta il id del device che detieni in quel momento il turno
+\end{description}
+
+La classe \code{GameState} contiene attributi annotati con \code{@SerializedName} in modo da poter essere convertita in un oggetto JSON (tramite GSON) ed essere inviata al secondo giocatore nel caso di partita multiplayer (maggiori dettagli nella sezione \ref{sec:multiplayer}).
+
+\section{Statistiche di gioco}
+\label{sec:stats}
+Le satistiche della partita, come accennato nel capitolo sul database, vengono salvate tramite i DAO \code{WordStat} e \code{GameStat} che contengono, ad esempio, i tempi di ritrovamento delle parole, le parole stesse, la pagine su cui sono state trovate o eventualmente l'id del giocatore che le ha trovate.
+
+\section{Game flow}
+\label{sec:game_flow}
+Tutta le fasi di una partita sono gestite dall'\code{Activity} \code{PlayActivity}.
+All'avvio, cioè durante la chiamata al metodo \code{onCreate()} essa esegue le seguenti operazioni:
+\begin{enumerate}
+\item Carica i settaggi della partita
+\item Carica i suoni di gioco
+\item Istanziaril sintetizzatore vocale \code{TextToSpeech}
+\item In base al tipo di partita (single o multi player) inizializza o meno il Bluetooth e setta la variabile \code{multi} a ``MASTER'' o ``SLAVE''
+\end{enumerate}
+
+I principali metodi di \code{PlayActivity} sono:
+\begin{description}
+\item[\code{startGame()}] Si occupa di inizializzare gli oggetti per le statistiche e chiama \code{constructPage()} and \code{startPage()}
+\item[\code{constructPage()}] Inizializza lo stato della partita (\code{GameState}) con i dati relativi alla pagina corrente. Chiama i metodi accessori \code{Helper.chooseSyllables()} (sceglie in modo casuale le sillabe per la pagina) e \code{Helper.permuteSyllablesInWords()} (calcola le permutazione delle sillabe scelte per trovare le parole componibili)
+\item[\code{startPage()}] Inizializza i \code{Fragments} che mostreranno l'interfaccia utente
+\item[\code{updateState()}] Si occupa di gestire la logica di gioco: determina se tutte le parole sono state trovate o se interrompere il gioco quando non è il proprio turno e posta sul Bus l'evento \code{StateUpdatedEvent} in modo che i \code{Fragments} possano reagire correttamente
+\end{description}
+
+L'\code{Activity} presenta inoltre diversi metodi annotati con \code{@Subscribe} che permettono di reagire agli eventi postati da altri componenti.
+
+\section{Invio statistiche}
+\label{sec:stats_send}
+L'invio delle statistiche avviene tramite l'invio di una mail all'indirizzo settato nelle impostazioni dell'applicazione.\\
+L'invio è gestito dall'\code{IntentService} \code{GenericIntentService} al quale viene passato l'id corrispondente alla partita appena conclusa. Interrogando il database esso carica i dati e li inserisce nel corpo dell'email formattandoli come mostrato nel listing \ref{lst:stats}. Il listing \ref{lst:stats_example} ne mostra invece un esempio.
+
+\begin{lstlisting}[float, caption=Struttura delle satistiche inviate, label=lst:stats]
+Dispositivo N: device id
+Tempo totale: mm:ss
+N - word: mm:ss (# of page on which the word was found)
+...
+\end{lstlisting}
+
+
+\begin{lstlisting}[float, caption=Esempio di statistiche, label=lst:stats_example]
+- One player -
+
+Dispositivo 1: BC:20:A4:73:6B:49
+Tempo totale: 00:13
+2 - fumo: 00:02 (1)
+1 - muro: 00:13 (2)
+
+- Two Player -
+
+Dispositivo 1: BC:20:A4:73:6B:49
+Dispositivo 2: D4:0B:1A:15:FD:AD
+Tempo totale: 00:14
+2 - ceno: 00:02 (1)
+1 - noce: 00:09 (1)
+2 - buco: 00:14 (2)
+\end{lstlisting}
+
+\section{Multiplayer}
+\label{sec:multi_player}
+Come già detto la modalità multi player segue le stesse regole di quella single player se non per il fatto che i due giocatori provano a turno ad trovare una parola.\\
+La comunicazione tra i due devices avviene tramite Bluetooth. La classe che si occupa di stabilire la connessione è \code{BluetoothService}
+
+
+
