@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:custom="http://schemas.android.com/apk/res-auto">
+                    xmlns:custom="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
         android:key="pref_game_settings"
@@ -42,6 +42,11 @@
             android:summary="@string/pref_title_game"
             android:title="@string/setting_email_title">
         </it.gbresciani.legodigitalsonoro.customUIElements.EmailPreference>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="pref_info_settings"
+        android:title="@string/pref_title_info">
         <Preference
             android:defaultValue=""
             android:selectable="false"

@@ -58,6 +58,7 @@
     <string name="lost_connection_msg">Connessione persa</string>
     <string name="wait_turn">Aspetta il tuo turno!</string>
     <string name="setting_device_id">setting_device_id</string>
+    <string name="pref_title_info">Informazioni</string>
 
 
 </resources>
