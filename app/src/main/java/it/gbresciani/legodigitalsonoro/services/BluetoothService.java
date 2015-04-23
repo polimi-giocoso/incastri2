@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.squareup.otto.Bus;
@@ -172,8 +173,10 @@ public class BluetoothService {
 
         setState(STATE_CONNECTED);
 
+        String deviceId =  Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+
         // Send the name of the connected device back to the UI Activity
-        BUS.post(new ConnectedDeviceNameEvent(device.getName(), device.getAddress()));
+        BUS.post(new ConnectedDeviceNameEvent(deviceId, device.getAddress()));
     }
 
     /**

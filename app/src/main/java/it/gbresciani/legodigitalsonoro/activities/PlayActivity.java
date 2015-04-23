@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -52,8 +53,8 @@ import it.gbresciani.legodigitalsonoro.fragments.SyllablesFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WaitDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordConfirmDialogFragment;
 import it.gbresciani.legodigitalsonoro.fragments.WordsFragment;
-import it.gbresciani.legodigitalsonoro.helper.Constants;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
+import it.gbresciani.legodigitalsonoro.helper.Constants;
 import it.gbresciani.legodigitalsonoro.helper.GameState;
 import it.gbresciani.legodigitalsonoro.helper.Helper;
 import it.gbresciani.legodigitalsonoro.model.GameStat;
@@ -136,7 +137,7 @@ public class PlayActivity extends FragmentActivity {
         BUS = BusProvider.getInstance();
         gson = new Gson();
 
-        //mDeviceId = BluetoothAdapter.getDefaultAdapter().getAddress();
+        mDeviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
 
         loadPref();
         loadSound();
