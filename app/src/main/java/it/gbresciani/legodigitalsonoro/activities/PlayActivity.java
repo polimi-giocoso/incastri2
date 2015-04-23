@@ -136,7 +136,7 @@ public class PlayActivity extends FragmentActivity {
         BUS = BusProvider.getInstance();
         gson = new Gson();
 
-        mDeviceId = BluetoothAdapter.getDefaultAdapter().getAddress();
+        //mDeviceId = BluetoothAdapter.getDefaultAdapter().getAddress();
 
         loadPref();
         loadSound();
@@ -809,9 +809,11 @@ public class PlayActivity extends FragmentActivity {
      */
     private void saySyllable(Syllable syllable) {
         if (ttsConfigured) {
+            mTTS.setLanguage(Locale.ITALIAN);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mTTS.setLanguage(Locale.ITALIAN);
                 mTTS.speak(syllable.getVal(), TextToSpeech.QUEUE_ADD, null, syllable.getVal());
+            } else {
+                mTTS.speak(syllable.getVal(), TextToSpeech.QUEUE_ADD, null);
             }
         } else {
             Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
