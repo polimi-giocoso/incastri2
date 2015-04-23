@@ -9,7 +9,7 @@
 
 \section{Struttura}
 \label{structure}
-Il database SQLite è stato implementato tramite SugarORM\footnote{\todo{Link}}, un ORM (Object-Relational Mapping) sviluppato appositamente per Android. In questo modo le entità del database sono direttamente mappate su classi Java, utilizzando il pattern DAO (Data Access Object).\\
+Il database SQLite è stato implementato tramite SugarORM, un ORM (Object-Relational Mapping) sviluppato appositamente per Android. In questo modo le entità del database sono direttamente mappate su classi Java, utilizzando il pattern DAO (Data Access Object).\\
 Il database contiene 5 entità all'interno del package \\\code{it.gbresciani.legodigitalsonoro.model}:
 \begin{description}
 	\item[\code{Word}] Contiene la parola, sia in italiano sia in inglese, e le sillabe che lo compongono.
@@ -23,8 +23,8 @@ In figura \ref{fig:entities} sono riportati dettagli delle entità.
 \label{fig:entities}
   \centering
     \centering{
-      \includegraphics[width=\textwidth]{entities.jpg}}
-  \caption{}
+      \includegraphics[width=\textwidth]{entities.png}}
+  \caption{Entità presenti nel database}
 \end{figure}
 
 \section{Inizializzazione}
@@ -42,6 +42,6 @@ Il listing \ref{lst:words_json} contiene un estratto del file \code{words.json}
   ...
 \end{lstlisting}
 
-Il mapping degli elementi JSON con la classe Java associata avviene tramite la libreria Open Source GSON\footnote{\todo{Link}}, sviluppata da Goolge, che fa uso di annotazioni per mappare gli attributi delle classi con i campi JSON.\\
+Il mapping degli elementi JSON con la classe Java associata avviene tramite la libreria Open Source GSON, sviluppata da Goolge, che fa uso di annotazioni per mappare gli attributi delle classi con i campi JSON.\\
 L'operazione di conversione dei dati da JSON a classi Java e il successivo inserimento all'interno del database, in quanto operazioni relativamente lunghe, non vengono eseguite all'interno del \textit{Thread} principale ma in uno differente grazie ad un \code{IntentService} contenuto in \\\code{it.gbresciani.legodigitalsonoro.services.InitDBService}. 
 

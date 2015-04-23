@@ -8,77 +8,29 @@
 \chapter{User Interface}
 \label{chap:ui}
 
-	\section{Master-Details layout}
-	As decided in the Design Document, the main screen of the application, containing the list of alarms, is presented in different ways depending on the screen size of the device: in particular, on large screens the list and the details of alarms are shown one next to each other. To get this kind of layout were exploited {\tt Fragmen}, UI components which have the particularity of being able to be reused in multiple {\tt Activity} maintaining their application logic. The classes used to achieve this behavior are:
+Come anticipato nel capitolo \ref{chap:game_logic}, l'interfaccia grafica del gioco è gestita quasi interamente da \code{Fragments}, che rispondono agli eventi pubblicati sul Bus dall'activity \code{PlayActivity} aggiornando i loro componenti.\\
+I due principali \code{Fragments} sono \code{WordsFragment} e \code{SyllablesFragment} (vedi figura \ref{fig:fragments}), che si occupano rispettivamente di gestire la porzione di schermo contenente le parole, e la porzione contenente le sillabe disponibili.
 
-		\begin{itemize}
-
-			\item MainActivity
-
-			\item AlarmDetailActiviy
-
-			\item AlarmListFragment
-
-			\item AlarmDetailFragment
-
-		\end{itemize}
-
-	It's has been also created a file {\tt refs.xml} in the folder res/values-sw600dp:
-
-		\begin{lstlisting}
-<resources>
-    <item type="layout" name="activity_alarm_list">@layout/activity_alarm_twopane</item>
-</resources>
-		\end{lstlisting}
-	along with files \texttt{activity\_alarm\_list.xml} and \texttt{activity\_alarm\_twopane.xml} in the folder res/layout.
-	Starting {\tt MainActivity} and executing:
-
-		\begin{lstlisting}
-inflater.inflate(R.layout.activity_alarm_list, container, false);
-		\end{lstlisting}
-
-	Android will know which of the two layouts to choose, thanks to the alias contained in {\tt refs.xm}, depending on the size of the display. In fact the system will choose the resources contained in folders with suffix ``-sw600dp'' when the width of the display will be greater than 600 dp. 
-	In this way it is possible to recognize whether the code is run on a tablet or a smartphone then choosing to put side by side {\tt 
-	AlarmListFragment} and {\tt AlarmDetailFragment} in the first case or only {\tt AlarmListFragment} in the latter.
-
-		\begin{figure}[h!]
-		  \centering
-		    \centering{%
-		      \includegraphics[width=1\textwidth]{master_detail_tablet.jpg}}
-		  \caption{Master-Details layout - Tablet}
-		\end{figure}
-
-		\begin{figure}[h!]
-		  \centering
-		    \centering{%
-		      \includegraphics[width=1\textwidth]{master_detail_phone.jpg}}
-		  \caption{Master-Details layout - Phone}
-		\end{figure}
+\begin{figure}[h!]
+\label{fig:fragments}
+  \centering
+    \centering{
+      \includegraphics[width=\textwidth]{fragments.png}}
+  \caption{Fragments della schermata di gioco}
+\end{figure}
 
 
-	\newpage
-	\section{AlarmDetailActivity}
-	This {\tt Activity} is launched thanks to an {\tt Intent} which contains an extra parameter that indicates the id of the alarm that will displayed:
+\section{WordsFragment}
+\label{sec:words_fragment}
+\code{WordsFragment} si occupa di gestire la parte di interfaccia grafica che rigurda le parole già trovate e quella ancora da trovare.\\
+Esso presenta una lista verticale di ``slot'' che possono essere ``vuoti'', o ``riempiti'' con le tessere di puzzle corrispondenti alle sillabe che formano la parola. Viene inoltre mostrata accanto ad ogni slot ``pieno'' una bandiera inglese che se toccata permette di ascolare il suono della parola tradotta in inglese.\\
+Il metodo \code{initUI()} si occupa, dato il numero di parole da trovare e la dimensione dello schermo (calcolata a runtime), di calcolare la dimensione degli slot corretta per gli slot con lo scompo di riempire al meglio lo spazio disponibile.\\
+Le immagini degli slot sono fornite come file PNG all'interno della cartella \code{assets} e vengono caricate dinamicamente come Bitmap della dimensione corretta (per risparimare memoria) dal metodo \code{loadWordBitmap()}.\\
+Il \code{Fragment} è sottoscritto all'evento \code{StateUpdatedEvent} in modo da reagire ai cambiamenti di stato della partita, come il ritrovamento di una nuova parola.
 
-		\begin{lstlisting}
-    Intent detailIntent = new Intent(mActivity, AlarmDetailActivity.class);
-    detailIntent.putExtra(AlarmDetailFragment.ARG_ITEM_ID, id);
-		\end{lstlisting}
+\section{SyllablesFragment}
+\label{sec:syllables_fragment}
 
-
-
-
-	\section{NotificationsManager}
-	he management of notifications has been enclosed in the class {\tt NotificationsManager}. The class has two {\tt Notifications}:
-
-		\begin{description}
-
-			\item[NOTIF\_ONGOING\_SERVICE] Notification permanently associated with the background service as described in section \ref{startForeground()}; the text of the notification is updated with the appropriate methods. Tapping it launches the app.
-
-			\item[NOTIF\_ONGOING\_ALARMS] Notification displayed permanently until there are new alarms not yet readed. Tapping it launches the alarm list.
-
-		\end{description}
-
-
-
-
+\code{SyllablesFragment} si occupa di gestire la parte di interfaccia grafica che rigurda le sillabe disponibili nella pagina corrente.\\
+Esso presenta una griglia sparsa di 2 o 4 tessere di puzzle colorate rappresentanti ognuna una sillaba. Se toccate le tessere vengono selezionate e si ``alzano'' per restituire un feedback della selezione e riproducono il suono della sillaba a cui sono associate.\\
+Al pari di \code{WordsFragment} calcola la dimensione corretta delle immagini e le carica come Bitmap.

@@ -7,9 +7,11 @@
 
 \chapter{Logica di gioco}
 
+\label{chap:game_logic}
+
 La logica di gioco è affidata all'Activity \code{PlayActivity}; essa gestisce inoltre i \code{Fragments} (vedi capitolo \ref{chap:ui}) che visualizzano l'Intefaccia Utente.
 
-\section{Glossary}
+\section{Glossario}
 \label{sec:glossary}
 In questa sezione vengono descritti acuni termini utili alla comprensione delle successive sezioni.
 
@@ -21,25 +23,24 @@ In questa sezione vengono descritti acuni termini utili alla comprensione delle 
 
 \section{Event Bus}
 \label{sec:event_bus}
-Per far comunicare i vari componenti dell'applicazione (\code{Activities}, \code{Fragments}, \code{Services}) è stato utilizzato Otto\footnote{\todo{Link}}, un \textit{Event Bus}, sviluppaato appositamente per Android, che permette ai vari componenti di postare eventi su un unico Bus e per riceverli in modo asincrono.\\
+Per far comunicare i vari componenti dell'applicazione (\code{Activities}, \code{Fragments}, \code{Services}) è stato utilizzato Otto, un \textit{Event Bus}, sviluppaato appositamente per Android, che permette ai vari componenti di postare eventi su un unico Bus e per riceverli in modo asincrono.\\
 La classe \code{BusProvider} permette, tramite un metodo statico, di accedere allo stesso Bus in ogni punto dell'applicazione.\\
-All'interno del package \code{package it.gbresciani.legodigitalsonoro.events;
-} son presenti numerose classi (ad esempio \code{WordClickedEvent} o \code{PageCompletedEvent}) che rappresentano i diversi eventi generati e ``ascoltati'' dai componenti dell'app.\\
-La classe \code{NineBus} è una piccola estensione del Bus predefinito di Otto che permette tutti gli eventi sul \code{Main Thread}, anche se generati in un altro \code{Thread}.
+All'interno del package \code{package it.gbresciani.legodigitalsonoro.events} son presenti numerose classi (ad esempio \code{WordClickedEvent} o \code{PageCompletedEvent}) che rappresentano i diversi eventi generati e ``ascoltati'' dai componenti dell'app.\\
+La classe \code{NineBus} è una piccola estensione del Bus predefinito di Otto che permette di pubblicare tutti gli eventi sul \code{Main Thread}, anche se generati in un altro \code{Thread}.
 
 \section{GameState}
 \label{sec:game_state}
 \code{GameState} è la classe che rappresenta lo stato di una partita, sia essa single o multi player. Viene inizializzato da \code{PlayActivity}, e aggiornato durante il corso della partita in seguito ai diversi eventi prodotti dagli altri componenti dell'app.\\
 I suoi attributi sono:
 \begin{description}
-    \item[pageNumber] Il numero di pagina corrente
-    \item[pages] Il numero di pagine totali della partita in corso (stabilito nelle impostazioni)
-    \item[pageWordsToFindNum] Il numero di parole ancora da trovare nella pagina corrente
-    \item[wordsAvailable] Un \code{ArrayList} contentente le parole ancora da trovare
-    \item[wordsFound] Un \code{ArrayList} contenente le parole gia trovate
-    \item[syllables] Un \code{ArrayList} contenente le syllabe presenti nella pagina corrente
-    \item[currentPlayer] Se la partita è multi player contiene una stringa che rappresenta il ruolo del giocatore che detieni in quel momento il turno
-    \item[currentPlayerDeviceId] Se la partita è multi player contiene una stringa che rappresenta il id del device che detieni in quel momento il turno
+    \item[pageNumber] Il numero di pagina corrente.
+    \item[pages] Il numero di pagine totali della partita in corso (stabilito nelle impostazioni).
+    \item[pageWordsToFindNum] Il numero di parole ancora da trovare nella pagina corrente.
+    \item[wordsAvailable] Un \code{ArrayList} contentente le parole ancora da trovare.
+    \item[wordsFound] Un \code{ArrayList} contenente le parole gia trovate.
+    \item[syllables] Un \code{ArrayList} contenente le syllabe presenti nella pagina corrente.
+    \item[currentPlayer] Se la partita è multi player contiene una stringa che rappresenta il ruolo del giocatore che detiene in quel momento il turno.
+    \item[currentPlayerDeviceId] Se la partita è multi player contiene una stringa che rappresenta l'id del dispositivo che detiene in quel momento il turno.
 \end{description}
 
 La classe \code{GameState} contiene attributi annotati con \code{@SerializedName} in modo da poter essere convertita in un oggetto JSON (tramite GSON) ed essere inviata al secondo giocatore nel caso di partita multiplayer (maggiori dettagli nella sezione \ref{sec:multiplayer}).
@@ -55,7 +56,7 @@ All'avvio, cioè durante la chiamata al metodo \code{onCreate()} essa esegue le 
 \begin{enumerate}
 \item Carica i settaggi della partita
 \item Carica i suoni di gioco
-\item Istanziaril sintetizzatore vocale \code{TextToSpeech}
+\item Istanzia il sintetizzatore vocale \code{TextToSpeech}
 \item In base al tipo di partita (single o multi player) inizializza o meno il Bluetooth e setta la variabile \code{multi} a ``MASTER'' o ``SLAVE''
 \end{enumerate}
 
@@ -67,7 +68,7 @@ I principali metodi di \code{PlayActivity} sono:
 \item[\code{updateState()}] Si occupa di gestire la logica di gioco: determina se tutte le parole sono state trovate o se interrompere il gioco quando non è il proprio turno e posta sul Bus l'evento \code{StateUpdatedEvent} in modo che i \code{Fragments} possano reagire correttamente
 \end{description}
 
-L'\code{Activity} presenta inoltre diversi metodi annotati con \code{@Subscribe} che permettono di reagire agli eventi postati da altri componenti.
+L'\code{Activity} presenta inoltre diversi metodi annotati con \code{@Subscribe} che permettono di reagire agli eventi pubblicati da altri componenti.
 
 \section{Invio statistiche}
 \label{sec:stats_send}
@@ -87,7 +88,7 @@ N - word: mm:ss (# of page on which the word was found)
 
 Dispositivo 1: BC:20:A4:73:6B:49
 Tempo totale: 00:13
-2 - fumo: 00:02 (1)
+1 - fumo: 00:02 (1)
 1 - muro: 00:13 (2)
 
 - Two Player -
@@ -101,9 +102,15 @@ Tempo totale: 00:14
 \end{lstlisting}
 
 \section{Multiplayer}
-\label{sec:multi_player}
-Come già detto la modalità multi player segue le stesse regole di quella single player se non per il fatto che i due giocatori provano a turno ad trovare una parola.\\
-La comunicazione tra i due devices avviene tramite Bluetooth. La classe che si occupa di stabilire la connessione è \code{BluetoothService}
+\label{sec:multiplayer}
+Come già detto la modalità multi player segue le stesse regole di quella single player se non per il fatto che i due giocatori provano a turno a trovare una parola.\\
+Il tablet ``master'' è quello che inizia il processo di connessione scegliendo, tra i dispositivi in ascolto, il tablet ``slave''. I vari aspetti della partita come i settaggi, le sillabe presenti e le parole da trovare vengono tutti stabiliti dal ``master'' che si occupa quindi anche di gestire il flow del gioco, mentre lo ``slave'' partecipa in modo passivo.\\
+La comunicazione tra i due dispositivi avviene tramite Bluetooth. La classe che si occupa di stabilire la connessione è \code{BluetoothService}; essa si serve di tre \code{Thread} differenti (\code{AcceptThread}, \code{ConnectThread}, \code{ConnectedThread}) per ricevere un connessione, effettuare una connessione, e inviare e ricevere messaggi.\\
+I messaggi scambiati sono stringhe contenenti oggetti JSON preceduti da un header che ne identifica la natura. I possibili messaggi sono $4$:
 
-
-
+\begin{description}
+    \item[GAME\_STATE] Contiene la rappresentazione JSON dell'oggetto \code{GameState} descritto nella sezione \ref{sec:game_state}. Solo il ``master'' invia questo tipo di messaggio allo ``slave'', il quale ne ricava tutte le informazioni necessarie.
+    \item[SIMPLE\_TURN\_PASS] Lo ``slave'' invia questo messaggio al ``master'' quando non è riuscito a trovare parole e quindi sta semplicemente passando il turno.
+    \item[WORD\_FOUND] Lo ``slave'' invia questo messaggio insieme alla parola trovata, in modo che il ``master'' possa aggiornare lo stato della partita.
+    \item[GAME\_END] Il ``master'' invia questo messaggio allo ``slave'' al termine della partita.
+\end{description}
