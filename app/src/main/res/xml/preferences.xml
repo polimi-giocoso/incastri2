@@ -42,6 +42,12 @@
             android:summary="@string/pref_title_game"
             android:title="@string/setting_email_title">
         </it.gbresciani.legodigitalsonoro.customUIElements.EmailPreference>
+        <Preference
+            android:defaultValue=""
+            android:selectable="false"
+            android:key="@string/setting_device_id"
+            android:title="Id del dispositivo">
+        </Preference>
     </PreferenceCategory>
 
 </PreferenceScreen>

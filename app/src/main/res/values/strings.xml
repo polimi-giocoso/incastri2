@@ -57,6 +57,7 @@
     <string name="error_connection_msg">Impossibile connettersi al dispositivo</string>
     <string name="lost_connection_msg">Connessione persa</string>
     <string name="wait_turn">Aspetta il tuo turno!</string>
+    <string name="setting_device_id">setting_device_id</string>
 
 
 </resources>

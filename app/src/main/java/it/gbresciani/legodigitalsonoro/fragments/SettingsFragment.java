@@ -3,6 +3,7 @@ package it.gbresciani.legodigitalsonoro.fragments;
 
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
+import android.provider.Settings;
 
 import com.nispok.snackbar.Snackbar;
 import com.nispok.snackbar.enums.SnackbarType;
@@ -35,6 +36,10 @@ public class SettingsFragment extends PreferenceFragment {
 
         setPreferenceScreen(null);
         addPreferencesFromResource(R.xml.preferences);
+
+        String deviceId = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
+
+        findPreference(getString(R.string.setting_device_id)).setSummary(deviceId);
 
         BUS = BusProvider.getInstance();
     }
