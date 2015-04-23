@@ -4,7 +4,9 @@ package it.gbresciani.legodigitalsonoro.fragments;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
@@ -12,13 +14,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Property;
+import android.util.TypedValue;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.ScaleAnimation;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -107,10 +113,24 @@ public class WordConfirmDialogFragment extends DialogFragment {
             return;
         }
 
-        int dialogWidth = 1200;
-        int dialogHeight = 1200;
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int height = size.y;
 
-        getDialog().getWindow().setLayout(dialogWidth, dialogHeight);
+        int dialogDimen = (int) (height * 0.8);
+        int buttonDimen = (int) (dialogDimen * 0.33);
+
+        // Set the objects dimensions based on the device screen size
+        okButton.getLayoutParams().height = buttonDimen;
+        okButton.getLayoutParams().width = buttonDimen;
+
+        noButton.getLayoutParams().height = buttonDimen;
+        noButton.getLayoutParams().width = buttonDimen;
+
+
+        getDialog().getWindow().setLayout(dialogDimen, dialogDimen);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
     }

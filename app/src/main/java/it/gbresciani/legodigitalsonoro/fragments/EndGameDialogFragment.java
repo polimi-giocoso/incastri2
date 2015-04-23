@@ -2,11 +2,15 @@ package it.gbresciani.legodigitalsonoro.fragments;
 
 
 import android.app.DialogFragment;
+import android.content.Context;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 
 import com.squareup.otto.Bus;
@@ -86,10 +90,24 @@ public class EndGameDialogFragment extends DialogFragment {
             return;
         }
 
-        int dialogWidth = 1200;
-        int dialogHeight = 1200;
 
-        getDialog().getWindow().setLayout(dialogWidth, dialogHeight);
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int height = size.y;
+
+        int dialogDimen = (int) (height * 0.8);
+        int buttonDimen = (int) (dialogDimen * 0.33);
+
+        // Set the objects dimensions based on the device screen size
+        repeatButton.getLayoutParams().height = buttonDimen;
+        repeatButton.getLayoutParams().width = buttonDimen;
+
+        exitButton.getLayoutParams().height = buttonDimen;
+        exitButton.getLayoutParams().width = buttonDimen;
+
+        getDialog().getWindow().setLayout(dialogDimen, dialogDimen);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
     }
