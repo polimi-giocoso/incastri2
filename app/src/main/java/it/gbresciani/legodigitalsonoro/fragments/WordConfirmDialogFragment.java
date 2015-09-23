@@ -1,42 +1,41 @@
 package it.gbresciani.legodigitalsonoro.fragments;
 
 
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Point;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.util.Property;
-import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.ScaleAnimation;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
+
+import java.util.Locale;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
 import it.gbresciani.legodigitalsonoro.R;
 import it.gbresciani.legodigitalsonoro.activities.PlayActivity;
+import it.gbresciani.legodigitalsonoro.events.SayTextEvent;
+import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordDismissedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordSelectedEvent;
 import it.gbresciani.legodigitalsonoro.helper.BusProvider;
@@ -49,7 +48,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
     public static final int WORD_DIALOG_TIMEOUT = 1000;
 
     private String wordLemma;
-    @InjectView(R.id.word_textview) TextView wordTextView;
+    @InjectView(R.id.speak_icon) ImageView speakIcon;
     @InjectView(R.id.confirm_dialog_layout) RelativeLayout confirmDialogLayout;
     @InjectView(R.id.ok_button) ImageButton okButton;
     @InjectView(R.id.no_button) ImageButton noButton;
@@ -101,8 +100,6 @@ public class WordConfirmDialogFragment extends DialogFragment {
         View v = inflater.inflate(R.layout.fragment_word_confirm_dialog, container, false);
         ButterKnife.inject(this, v);
 
-        wordTextView.setText(wordLemma);
-
         return v;
     }
 
@@ -135,6 +132,12 @@ public class WordConfirmDialogFragment extends DialogFragment {
 
     }
 
+    @OnClick(R.id.speak_icon)
+    public void spekIconClicked(){
+        BUS.post(new SayTextEvent(wordLemma, Locale.ITALIAN));
+
+    }
+
     @OnClick(R.id.ok_button)
     public void ok() {
 
@@ -160,26 +163,9 @@ public class WordConfirmDialogFragment extends DialogFragment {
 
     @Subscribe public void wordSelected(WordSelectedEvent wordSelectedEvent) {
 
-        final Property<TextView, Integer> property = new Property<TextView, Integer>(int.class, "textColor") {
-            @Override
-            public Integer get(TextView object) {
-                return object.getCurrentTextColor();
-            }
-
-            @Override
-            public void set(TextView object, Integer value) {
-                object.setTextColor(value);
-            }
-        };
-
-
         final WordSelectedEvent wordEvent = wordSelectedEvent;
 
-        final ObjectAnimator animator = ObjectAnimator.ofInt(wordTextView, property, getResources().getColor(android.R.color.white));
-        animator.setDuration(100);
-        animator.setEvaluator(new ArgbEvaluator());
-        animator.setInterpolator(new AccelerateInterpolator(1));
-
+        AnimationDrawable speakIconAnim = (AnimationDrawable) speakIcon.getDrawable();
 
         ScaleAnimation scaleAnimation = new ScaleAnimation(1f, 0f, 1f, 0f,
                 ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
@@ -224,7 +210,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
         if (wordEvent.isCorrect()) {
             if (wordEvent.isNew()) {
                 confirmDialogLayout.setBackground(okCrossfader);
-                animator.start();
+                speakIconAnim.start();
             } else {
                 // Skip color animation
                 (new Handler()).postDelayed(new Runnable() {
@@ -236,7 +222,7 @@ public class WordConfirmDialogFragment extends DialogFragment {
             }
         } else {
             confirmDialogLayout.setBackground(noCrossfader);
-            animator.start();
+            speakIconAnim.start();
         }
 
         okCrossfader.startTransition(100);

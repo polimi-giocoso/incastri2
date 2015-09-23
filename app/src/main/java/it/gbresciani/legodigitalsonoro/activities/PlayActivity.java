@@ -41,6 +41,7 @@ import it.gbresciani.legodigitalsonoro.events.MessageWriteEvent;
 import it.gbresciani.legodigitalsonoro.events.NextPageEvent;
 import it.gbresciani.legodigitalsonoro.events.PageCompletedEvent;
 import it.gbresciani.legodigitalsonoro.events.RepeatEvent;
+import it.gbresciani.legodigitalsonoro.events.SayTextEvent;
 import it.gbresciani.legodigitalsonoro.events.StateUpdatedEvent;
 import it.gbresciani.legodigitalsonoro.events.SyllableSelectedEvent;
 import it.gbresciani.legodigitalsonoro.events.WordClickedEvent;
@@ -489,7 +490,8 @@ public class PlayActivity extends FragmentActivity {
         if ("".equals(syllableYetSelected)) {
             syllableYetSelected = syllableSelectedEvent.getSyllable().getVal();
             timeoutHandler.postDelayed(new Runnable() {
-                @Override public void run() {
+                @Override
+                public void run() {
                     //If no other syllable has been selected dismiss
                     if (!"".equals(syllableYetSelected)) {
                         BUS.post(new WordDismissedEvent());
@@ -591,6 +593,13 @@ public class PlayActivity extends FragmentActivity {
      */
     @Subscribe public void wordClicked(WordClickedEvent wordClickedEvent) {
         sayWord(wordClickedEvent.getWord(), wordClickedEvent.getLANG());
+    }
+
+    /**
+     * React to a SayTextEvent
+     */
+    @Subscribe public void sayText(SayTextEvent sayTextEvent) {
+        sayText(sayTextEvent.getText(), Locale.ITALIAN);
     }
 
     /**
@@ -796,6 +805,29 @@ public class PlayActivity extends FragmentActivity {
                 }
                 if (lang.equals(Locale.ITALIAN)) {
                     mTTS.speak(word.getLemma(), TextToSpeech.QUEUE_ADD, null);
+                }
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.no_tts_message), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void sayText(String text, Locale lang) {
+        if (ttsConfigured) {
+            mTTS.setLanguage(lang);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (lang.equals(Locale.ENGLISH)) {
+                    mTTS.speak(text, TextToSpeech.QUEUE_ADD, null, text);
+                }
+                if (lang.equals(Locale.ITALIAN)) {
+                    mTTS.speak(text, TextToSpeech.QUEUE_ADD, null, text);
+                }
+            } else {
+                if (lang.equals(Locale.ENGLISH)) {
+                    mTTS.speak(text, TextToSpeech.QUEUE_ADD, null);
+                }
+                if (lang.equals(Locale.ITALIAN)) {
+                    mTTS.speak(text, TextToSpeech.QUEUE_ADD, null);
                 }
             }
         } else {
