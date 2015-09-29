@@ -1,226 +1,30 @@
 [
   {
-    "val":"ar",
-    "color":"#f44336"
-  },
-  {
-    "val":"be",
-    "color": "#e91e63"
-  },
-  {
-    "val":"bi",
-    "color": "#9c27b0"
-  },
-  {
-    "val":"bo",
-    "color": "#9c27b0"
-  },
-  {
-    "val":"bu",
-    "color": "#b71c1c"
-  },
-  {
-    "val":"ca",
-    "color": "#880e4f"
-  },
-  {
     "val":"ce",
     "color": "#ad1457"
-  },
-  {
-    "val":"co",
-    "color": "#6a1b9a"
-  },
-  {
-    "val":"cu",
-    "color": "#4a148c"
-  },
-  {
-    "val":"da",
-    "color": "#ba68c8"
-  },
-  {
-    "val":"di",
-    "color": "#ff5252"
-  },
-  {
-    "val":"do",
-    "color": "#ff1744"
-  },
-  {
-    "val":"du",
-    "color": "#d50000"
-  },
-  {
-    "val":"fa",
-    "color": "#ff4081"
-  },
-  {
-    "val":"fi",
-    "color": "#f50057"
-  },
-  {
-    "val":"fo",
-    "color": "#c51162"
-  },
-  {
-    "val":"fu",
-    "color": "#e040fb"
-  },
-  {
-    "val":"gi",
-    "color": "#d500f9"
-  },
-  {
-    "val":"go",
-    "color": "#673ab7"
-  },
-  {
-    "val":"gu",
-    "color": "#3f51b5"
-  },
-  {
-    "val":"la",
-    "color": "#2196f3"
-  },
-  {
-    "val":"le",
-    "color": "#2196f3"
   },
   {
     "val":"lo",
     "color": "#2196f3"
   },
   {
-    "val":"lu",
-    "color": "#4527a0"
-  },
-  {
-    "val":"ma",
-    "color": "#1a237e"
-  },
-  {
-    "val":"me",
-    "color": "#5c6bc0"
-  },
-  {
-    "val":"mo",
-    "color": "#0d47a1"
-  },
-  {
-    "val":"mu",
-    "color": "#448aff"
+    "val":"mi",
+    "color": "#ABC5F0"
   },
   {
     "val":"na",
     "color": "#2962ff"
   },
   {
-    "val":"ne",
-    "color": "#03a9f4"
-  },
-  {
-    "val":"ni",
-    "color": "#00bcd4"
-  },
-  {
-    "val":"no",
-    "color": "#009688"
-  },
-  {
-    "val":"nu",
-    "color": "#0277bd"
-  },
-  {
-    "val":"on",
-    "color": "#01579b"
-  },
-  {
-    "val":"or",
-    "color": "#00838f"
-  },
-  {
-    "val":"pa",
-    "color": "#006064"
-  },
-  {
     "val":"pe",
     "color": "#00acc1"
-  },
-  {
-    "val":"pi",
-    "color": "#004d40"
-  },
-  {
-    "val":"po",
-    "color": "#004d40"
-  },
-  {
-    "val":"pu",
-    "color": "#009688"
   },
   {
     "val":"ra",
     "color": "#0091ea"
   },
   {
-    "val":"re",
-    "color": "#4caf50"
-  },
-  {
-    "val":"ri",
-    "color": "#8bc34a"
-  },
-  {
-    "val":"ro",
-    "color": "#1b5e20"
-  },
-  {
-    "val":"sa",
-    "color": "#558b2f"
-  },
-  {
-    "val":"se",
-    "color": "#4caf50"
-  },
-  {
-    "val":"so",
-    "color": "#2e7d32"
-  },
-  {
-    "val":"su",
-    "color": "#827717"
-  },
-  {
-    "val":"ta",
-    "color": "#ef6c00"
-  },
-  {
-    "val":"to",
-    "color": "#e65100"
-  },
-  {
-    "val":"tu",
-    "color": "#ff5722"
-  },
-  {
-    "val":"va",
-    "color": "#795548"
-  },
-  {
     "val":"ve",
     "color": "#dd2c00"
-  },
-  {
-    "val":"vi",
-    "color": "#263238"
-  },
-  {
-    "val":"vo",
-    "color": "#263238"
-  },
-  {
-    "val":"ze",
-    "color": "#4e342e"
   }
 ]
