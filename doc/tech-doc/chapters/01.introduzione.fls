@@ -1,7 +1,0 @@
-PWD /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech doc/chapters
-INPUT /usr/local/texlive/2014basic/texmf.cnf
-INPUT /usr/local/texlive/2014basic/texmf-dist/web2c/texmf.cnf
-INPUT /usr/local/texlive/2014basic/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech doc/chapters/01.introduzione.tex
-OUTPUT /Users/bear/Developer/Projects/Polimi/Giocoso/doc/tech doc/chapters/01.introduzione.log
-INPUT /usr/local/texlive/2014basic/texmf-dist/fonts/tfm/public/cm/cmti10.tfm
